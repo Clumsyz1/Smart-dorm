@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { getRoleLabel } from '../core';
 import type { AppRoute, OverviewCard, PageMeta, RouteDefinition, User } from '../types';
 import type { ThemeMode } from '../useTheme';
@@ -32,15 +32,35 @@ export function AppShell({
   onLogout,
   onSetTheme
 }: AppShellProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Lock body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSidebarOpen]);
+
   return (
     <div className="shell">
-      <aside className="sidebar panel elevated">
-        <div className="brand-block">
+      {isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />
+      )}
+      <aside className={`sidebar panel elevated ${isSidebarOpen ? 'is-open' : ''}`}>
+        <div className="sidebar-mobile-header">
+          <div className="brand-block">
           <div className="brand-badge">Icon</div>
           <div>
             <strong>Smart Dorm</strong>
             <span>Management System</span>
           </div>
+        </div>
+        <button className="hamburger-close-btn" onClick={() => setIsSidebarOpen(false)}>✕</button>
         </div>
 
         <div className="profile-card">
@@ -63,7 +83,10 @@ export function AppShell({
               key={item.key}
               className={`nav-button ${route === item.key ? 'is-active' : ''}`}
               type="button"
-              onClick={() => onNavigate(item.key)}
+              onClick={() => {
+                onNavigate(item.key);
+                setIsSidebarOpen(false);
+              }}
             >
               <span>{item.emoji}</span>
               <strong>{item.label}</strong>
@@ -81,10 +104,19 @@ export function AppShell({
 
       <main className="main-area">
         <header className="page-header panel">
-          <div>
-            <div className="eyebrow subtle">{getRoleLabel(currentUser.role)}</div>
+          <div className="header-mobile-wrapper">
+            <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)} title="Menu">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            <div>
+              <div className="eyebrow subtle">{getRoleLabel(currentUser.role)}</div>
             <h1>{pageMeta.title}</h1>
             <p>{pageMeta.description}</p>
+            </div>
           </div>
         </header>
 

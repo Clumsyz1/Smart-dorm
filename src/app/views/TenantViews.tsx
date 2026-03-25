@@ -12,6 +12,8 @@ type TenantDashboardViewProps = {
   onNavigateBills: () => void;
   onNavigateMaintenance: () => void;
   onNavigateAnnouncements: () => void;
+  isSubmittingPassword?: boolean;
+  onChangePassword?: (event: FormEvent<HTMLFormElement>) => void;
 };
 
 export function TenantDashboardView({
@@ -22,7 +24,9 @@ export function TenantDashboardView({
   getRoomName,
   onNavigateBills,
   onNavigateMaintenance,
-  onNavigateAnnouncements
+  onNavigateAnnouncements,
+  isSubmittingPassword,
+  onChangePassword
 }: TenantDashboardViewProps) {
   const currentBill = bills.find((bill) => bill.status !== 'paid') || bills[0] || null;
 
@@ -67,6 +71,26 @@ export function TenantDashboardView({
               <p>{latestAnnouncement.message}</p>
             </div>
           ) : <EmptyState title="ยังไม่มีประกาศ" description="เมื่อมีประกาศใหม่ คุณจะเห็นรายการล่าสุดที่นี่" />}
+        </article>
+      </section>
+
+      <section className="content-grid two-columns">
+        <article className="panel">
+          <div className="panel-heading">
+            <div>
+              <span className="section-kicker">Security</span>
+              <h2>เปลี่ยนรหัสผ่าน</h2>
+            </div>
+          </div>
+          <form className="form-grid" onSubmit={onChangePassword}>
+            <label className="full-span">
+              <span>ตั้งรหัสผ่านใหม่</span>
+              <input name="password" type="password" placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)" required disabled={isSubmittingPassword} minLength={6} />
+            </label>
+            <button className="secondary-button compact full-span" type="submit" disabled={isSubmittingPassword}>
+              {isSubmittingPassword ? 'กำลังอัปเดต...' : 'เปลี่ยนรหัสผ่าน'}
+            </button>
+          </form>
         </article>
       </section>
 
