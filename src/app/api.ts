@@ -1,4 +1,4 @@
-import type { User, Room, Bill, MaintenanceRequest, Announcement, AppState } from './types';
+import type { AppState } from './types';
 
 const API_BASE = '/api';
 

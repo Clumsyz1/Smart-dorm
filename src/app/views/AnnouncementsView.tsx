@@ -15,8 +15,8 @@ type AnnouncementsViewProps = {
 export function AnnouncementsView({ adminTools, announcements, deletingAnnouncementId, isSubmitting, onSubmit, onDelete }: AnnouncementsViewProps) {
   return (
     <>
-      {adminTools ? (
-        <section className="content-grid two-columns align-start">
+      {adminTools && (
+        <section className="stack-list">
           <article className="panel">
             <div className="panel-heading">
               <div>
@@ -44,33 +44,8 @@ export function AnnouncementsView({ adminTools, announcements, deletingAnnouncem
               <button className="primary-button" type="submit" disabled={isSubmitting}>{isSubmitting ? 'กำลังเผยแพร่...' : 'เผยแพร่ประกาศ'}</button>
             </form>
           </article>
-
-          <article className="panel">
-            <div className="panel-heading">
-              <div>
-                <span className="section-kicker">Audience</span>
-                <h2>ประกาศที่เผยแพร่แล้ว</h2>
-              </div>
-            </div>
-            {announcements.length ? announcements.slice(0, 3).map((announcement) => (
-              <article className="announcement-card panel" key={announcement.id}>
-                <div className="announcement-top wrap-mobile">
-                  <div className="badge-cluster">
-                    <StatusBadge status={announcement.priority} />
-                    <small>{formatDate(announcement.createdAt, true)}</small>
-                  </div>
-                  <button className="ghost-button compact" type="button" onClick={() => onDelete(announcement.id)} disabled={deletingAnnouncementId === announcement.id}>
-                    ลบประกาศ
-                  </button>
-                </div>
-                <h3>{announcement.title}</h3>
-                <p>{announcement.message}</p>
-                <small>ประกาศโดย {announcement.createdBy}</small>
-              </article>
-            )) : <EmptyState title="ยังไม่มีประกาศ" description="เมื่อโพสต์ประกาศใหม่ รายการล่าสุดจะปรากฏที่นี่" />}
-          </article>
         </section>
-      ) : null}
+      )}
 
       <section className="stack-list">
         {announcements.length ? announcements.map((announcement) => (

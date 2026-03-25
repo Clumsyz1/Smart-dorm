@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 import { AppShell } from './components/AppShell';
 import { AuthScreen } from './components/AuthScreen';
 import { FlashMessage } from './components/ui';
@@ -23,17 +23,13 @@ import {
   formatCurrency,
   getBillTotal,
   getRoleLabel,
-  getBillById,
-  getMaintenanceById,
   toDateInput,
   today,
-  WATER_RATE,
-  ELECTRIC_RATE
 } from './core';
 import { AnnouncementsView } from './views/AnnouncementsView';
 import { AdminBillingView, AdminDashboardView, AdminMaintenanceView, AdminOccupancyView } from './views/AdminViews';
 import { TenantBillsView, TenantDashboardView, TenantMaintenanceView } from './views/TenantViews';
-import type { AppRoute, AppState, BillStatus, FlashState, MaintenanceStatus, Priority, RoomStatus, User } from './types';
+import type { AppRoute, AppState, BillStatus, FlashState, MaintenanceStatus, RoomStatus, User } from './types';
 import { api, fetchAppState, getToken, setToken } from './api';
 
 function RootApp() {
