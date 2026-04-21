@@ -115,7 +115,6 @@ export const today = new Date();
 export const currentMonth = toMonthValue(today);
 export const previousMonth = toMonthValue(addMonths(today, -1));
 
-
 export function formatCurrency(value: number) {
   return new Intl.NumberFormat("th-TH", {
     style: "currency",
@@ -302,7 +301,6 @@ export function getAssignableRoomsForTenant(state: AppState, tenantId = "") {
       (!room.tenantId || room.tenantId === tenantId),
   );
 }
-
 
 export function sumBills(bills: Bill[]) {
   return bills.reduce((sum, bill) => sum + getBillTotal(bill), 0);

@@ -1,15 +1,28 @@
-export type Role = 'tenant' | 'admin';
-export type BillStatus = 'pending' | 'submitted' | 'paid' | 'overdue';
-export type MaintenanceStatus = 'open' | 'in_progress' | 'resolved' | 'cancelled';
-export type RoomStatus = 'available' | 'maintenance';
-export type Priority = 'low' | 'medium' | 'high';
-export type TenantRoute = 'dashboard' | 'bills' | 'maintenance' | 'announcements';
-export type AdminRoute = 'dashboard' | 'occupancy' | 'billing' | 'maintenance' | 'announcements';
+export type Role = "tenant" | "admin";
+export type BillStatus = "pending" | "submitted" | "paid" | "overdue";
+export type MaintenanceStatus =
+  | "open"
+  | "in_progress"
+  | "resolved"
+  | "cancelled";
+export type RoomStatus = "available" | "maintenance";
+export type Priority = "low" | "medium" | "high";
+export type TenantRoute =
+  | "dashboard"
+  | "bills"
+  | "maintenance"
+  | "announcements";
+export type AdminRoute =
+  | "dashboard"
+  | "occupancy"
+  | "billing"
+  | "maintenance"
+  | "announcements";
 export type AppRoute = TenantRoute | AdminRoute;
 
 export type FlashState = {
   message: string;
-  tone: 'success' | 'info' | 'danger';
+  tone: "success" | "info" | "danger";
 } | null;
 
 export type RouteDefinition = {

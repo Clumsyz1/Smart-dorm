@@ -1,25 +1,25 @@
-import type { AppState } from './types';
+import type { AppState } from "./types";
 
-const API_BASE = '/api';
+const API_BASE = "/api";
 
 export function getToken() {
-  return localStorage.getItem('smartdorm_token') || '';
+  return localStorage.getItem("smartdorm_token") || "";
 }
 
 export function setToken(token: string) {
   if (token) {
-    localStorage.setItem('smartdorm_token', token);
+    localStorage.setItem("smartdorm_token", token);
   } else {
-    localStorage.removeItem('smartdorm_token');
+    localStorage.removeItem("smartdorm_token");
   }
 }
 
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const token = getToken();
   const headers = new Headers(options.headers || {});
-  headers.set('Content-Type', 'application/json');
+  headers.set("Content-Type", "application/json");
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   const response = await fetch(`${API_BASE}${url}`, {
@@ -37,42 +37,84 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
 export const api = {
   auth: {
-    login: (credentials: any) => fetchWithAuth('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
-    me: () => fetchWithAuth('/auth/me'),
+    login: (credentials: any) =>
+      fetchWithAuth("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(credentials),
+      }),
+    me: () => fetchWithAuth("/auth/me"),
   },
   users: {
-    list: () => fetchWithAuth('/users'),
-    update: (id: string, data: any) => fetchWithAuth(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => fetchWithAuth(`/users/${id}`, { method: 'DELETE' }),
-    create: (data: any) => fetchWithAuth('/auth/register', { method: 'POST', body: JSON.stringify(data) })
+    list: () => fetchWithAuth("/users"),
+    update: (id: string, data: any) =>
+      fetchWithAuth(`/users/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) => fetchWithAuth(`/users/${id}`, { method: "DELETE" }),
+    create: (data: any) =>
+      fetchWithAuth("/auth/register", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
   },
   rooms: {
-    list: () => fetchWithAuth('/rooms'),
-    create: (data: any) => fetchWithAuth('/rooms', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) => fetchWithAuth(`/rooms/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => fetchWithAuth(`/rooms/${id}`, { method: 'DELETE' }),
+    list: () => fetchWithAuth("/rooms"),
+    create: (data: any) =>
+      fetchWithAuth("/rooms", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) =>
+      fetchWithAuth(`/rooms/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) => fetchWithAuth(`/rooms/${id}`, { method: "DELETE" }),
   },
   bills: {
-    list: () => fetchWithAuth('/bills'),
-    create: (data: any) => fetchWithAuth('/bills', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) => fetchWithAuth(`/bills/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => fetchWithAuth(`/bills/${id}`, { method: 'DELETE' }),
+    list: () => fetchWithAuth("/bills"),
+    create: (data: any) =>
+      fetchWithAuth("/bills", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) =>
+      fetchWithAuth(`/bills/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) => fetchWithAuth(`/bills/${id}`, { method: "DELETE" }),
   },
   maintenance: {
-    list: () => fetchWithAuth('/maintenance'),
-    create: (data: any) => fetchWithAuth('/maintenance', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) => fetchWithAuth(`/maintenance/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => fetchWithAuth(`/maintenance/${id}`, { method: 'DELETE' }),
+    list: () => fetchWithAuth("/maintenance"),
+    create: (data: any) =>
+      fetchWithAuth("/maintenance", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: any) =>
+      fetchWithAuth(`/maintenance/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchWithAuth(`/maintenance/${id}`, { method: "DELETE" }),
   },
   announcements: {
-    list: () => fetchWithAuth('/announcements'),
-    create: (data: any) => fetchWithAuth('/announcements', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) => fetchWithAuth(`/announcements/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => fetchWithAuth(`/announcements/${id}`, { method: 'DELETE' }),
-  }
+    list: () => fetchWithAuth("/announcements"),
+    create: (data: any) =>
+      fetchWithAuth("/announcements", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: any) =>
+      fetchWithAuth(`/announcements/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      fetchWithAuth(`/announcements/${id}`, { method: "DELETE" }),
+  },
 };
 
-export async function fetchAppState(role: 'admin' | 'tenant'): Promise<AppState> {
+export async function fetchAppState(
+  role: "admin" | "tenant",
+): Promise<AppState> {
   const [rooms, announcements, bills, maintenanceRequests] = await Promise.all([
     api.rooms.list(),
     api.announcements.list(),
@@ -81,7 +123,7 @@ export async function fetchAppState(role: 'admin' | 'tenant'): Promise<AppState>
   ]);
 
   let users = [];
-  if (role === 'admin') {
+  if (role === "admin") {
     users = await api.users.list();
   }
 

@@ -1,9 +1,15 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { getRoleLabel } from '../core';
-import type { AppRoute, OverviewCard, PageMeta, RouteDefinition, User } from '../types';
-import type { ThemeMode } from '../useTheme';
-import { ThemeToggle } from './ThemeToggle';
-import { SummaryCard } from './ui';
+import { useEffect, useState, type ReactNode } from "react";
+import { getRoleLabel } from "../core";
+import type {
+  AppRoute,
+  OverviewCard,
+  PageMeta,
+  RouteDefinition,
+  User,
+} from "../types";
+import type { ThemeMode } from "../useTheme";
+import { ThemeToggle } from "./ThemeToggle";
+import { SummaryCard } from "./ui";
 
 type AppShellProps = {
   currentUser: User;
@@ -30,42 +36,61 @@ export function AppShell({
   themeMode,
   onNavigate,
   onLogout,
-  onSetTheme
+  onSetTheme,
 }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Lock body scroll when sidebar is open on mobile
   useEffect(() => {
     if (isSidebarOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isSidebarOpen]);
 
   return (
     <div className="shell">
       {isSidebarOpen && (
-        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />
+        <div
+          className="sidebar-overlay"
+          onClick={() => setIsSidebarOpen(false)}
+        />
       )}
-      <aside className={`sidebar panel elevated ${isSidebarOpen ? 'is-open' : ''}`}>
+      <aside
+        className={`sidebar panel elevated ${isSidebarOpen ? "is-open" : ""}`}
+      >
         <div className="sidebar-mobile-header">
           <div className="brand-block">
-          <div className="brand-badge">Icon</div>
-          <div>
-            <strong>Smart Dorm</strong>
-            <span>Management System</span>
+            <div className="brand-badge">Icon</div>
+            <div>
+              <strong>Smart Dorm</strong>
+              <span>Management System</span>
+            </div>
           </div>
-        </div>
-        <button className="hamburger-close-btn" onClick={() => setIsSidebarOpen(false)}>✕</button>
+          <button
+            className="hamburger-close-btn"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            ✕
+          </button>
         </div>
 
         <div className="profile-card">
           <div className="avatar">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
@@ -81,7 +106,7 @@ export function AppShell({
           {allowedRoutes.map((item) => (
             <button
               key={item.key}
-              className={`nav-button ${route === item.key ? 'is-active' : ''}`}
+              className={`nav-button ${route === item.key ? "is-active" : ""}`}
               type="button"
               onClick={() => {
                 onNavigate(item.key);
@@ -96,7 +121,11 @@ export function AppShell({
 
         <div className="sidebar-footer">
           <ThemeToggle mode={themeMode} onSetMode={onSetTheme} />
-          <button className="ghost-button full-width" type="button" onClick={onLogout}>
+          <button
+            className="ghost-button full-width"
+            type="button"
+            onClick={onLogout}
+          >
             ออกจากระบบ
           </button>
         </div>
@@ -105,26 +134,46 @@ export function AppShell({
       <main className="main-area">
         <header className="page-header panel">
           <div className="header-mobile-wrapper">
-            <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)} title="Menu">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <button
+              className="hamburger-btn"
+              onClick={() => setIsSidebarOpen(true)}
+              title="Menu"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <line x1="3" y1="18" x2="21" y2="18"></line>
               </svg>
             </button>
             <div>
-              <div className="eyebrow subtle">{getRoleLabel(currentUser.role)}</div>
-            <h1>{pageMeta.title}</h1>
-            <p>{pageMeta.description}</p>
+              <div className="eyebrow subtle">
+                {getRoleLabel(currentUser.role)}
+              </div>
+              <h1>{pageMeta.title}</h1>
+              <p>{pageMeta.description}</p>
             </div>
           </div>
         </header>
 
         {flash}
-        {route === 'dashboard' ? (
+        {route === "dashboard" ? (
           <section className="overview-grid">
             {overviewCards.map((card) => (
-              <SummaryCard key={card.label} label={card.label} value={card.value} description={card.description} />
+              <SummaryCard
+                key={card.label}
+                label={card.label}
+                value={card.value}
+                description={card.description}
+              />
             ))}
           </section>
         ) : null}

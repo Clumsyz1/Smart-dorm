@@ -1,11 +1,23 @@
-import type { FlashState } from '../types';
-import { getStatusLabel, getToneClass } from '../core';
+import { getStatusLabel, getToneClass } from "../core";
+import type { FlashState } from "../types";
 
 export function StatusBadge({ status }: { status: string }) {
-  return <span className={`status-badge tone-${getToneClass(status)}`}>{getStatusLabel(status)}</span>;
+  return (
+    <span className={`status-badge tone-${getToneClass(status)}`}>
+      {getStatusLabel(status)}
+    </span>
+  );
 }
 
-export function SummaryCard({ label, value, description }: { label: string; value: string; description: string }) {
+export function SummaryCard({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: string;
+  description: string;
+}) {
   return (
     <article className="summary-card panel">
       <span className="summary-label">{label}</span>
@@ -15,7 +27,13 @@ export function SummaryCard({ label, value, description }: { label: string; valu
   );
 }
 
-export function EmptyState({ title, description }: { title: string; description: string }) {
+export function EmptyState({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   return (
     <div className="empty-state panel">
       <strong>{title}</strong>
@@ -46,7 +64,10 @@ export function PseudoQr({ reference }: { reference: string }) {
     <div className="qr-wrapper">
       <div className="qr-grid">
         {cells.map((isFilled, index) => (
-          <span key={`${reference}-${index}`} className={`qr-cell ${isFilled ? 'is-filled' : ''}`} />
+          <span
+            key={`${reference}-${index}`}
+            className={`qr-cell ${isFilled ? "is-filled" : ""}`}
+          />
         ))}
       </div>
       <small>{reference}</small>

@@ -1,14 +1,17 @@
-import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
-import { AppShell } from './components/AppShell';
-import { AuthScreen } from './components/AuthScreen';
-import { FlashMessage } from './components/ui';
-import { useTheme } from './useTheme';
+import { type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { api, fetchAppState, getToken, setToken } from "./api";
+import { AppShell } from "./components/AppShell";
+import { AuthScreen } from "./components/AuthScreen";
+import { FlashMessage } from "./components/ui";
 import {
   currentMonth,
+  formatCurrency,
   getAssignableRoomsForTenant,
   getBillsForTenant,
+  getBillTotal,
   getLatestAnnouncements,
   getMaintenanceForTenant,
+  getRoleLabel,
   getRoomById,
   getRoomDisplayStatus,
   getRoomName,
@@ -20,41 +23,64 @@ import {
   pageTitleMap,
   readImageFile,
   routeDefinitions,
-  formatCurrency,
-  getBillTotal,
-  getRoleLabel,
   toDateInput,
   today,
-} from './core';
-import { AnnouncementsView } from './views/AnnouncementsView';
-import { AdminBillingView, AdminDashboardView, AdminMaintenanceView, AdminOccupancyView } from './views/AdminViews';
-import { TenantBillsView, TenantDashboardView, TenantMaintenanceView } from './views/TenantViews';
-import type { AppRoute, AppState, BillStatus, FlashState, MaintenanceStatus, RoomStatus, User } from './types';
-import { api, fetchAppState, getToken, setToken } from './api';
+} from "./core";
+import type {
+  AppRoute,
+  AppState,
+  BillStatus,
+  FlashState,
+  MaintenanceStatus,
+  RoomStatus,
+  User,
+} from "./types";
+import { useTheme } from "./useTheme";
+import {
+  AdminBillingView,
+  AdminDashboardView,
+  AdminMaintenanceView,
+  AdminOccupancyView,
+} from "./views/AdminViews";
+import { AnnouncementsView } from "./views/AnnouncementsView";
+import {
+  TenantBillsView,
+  TenantDashboardView,
+  TenantMaintenanceView,
+} from "./views/TenantViews";
 
 function RootApp() {
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
-  const [state, setState] = useState<AppState>({ users: [], rooms: [], announcements: [], bills: [], maintenanceRequests: [] });
+  const [state, setState] = useState<AppState>({
+    users: [],
+    rooms: [],
+    announcements: [],
+    bills: [],
+    maintenanceRequests: [],
+  });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAppLoading, setIsAppLoading] = useState(true);
-  
-  const [route, setRoute] = useState<AppRoute>('dashboard');
-  const [editingTenantId, setEditingTenantId] = useState('');
-  const [editingRoomId, setEditingRoomId] = useState('');
+
+  const [route, setRoute] = useState<AppRoute>("dashboard");
+  const [editingTenantId, setEditingTenantId] = useState("");
+  const [editingRoomId, setEditingRoomId] = useState("");
   const [flash, setFlash] = useState<FlashState>(null);
-  
+
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isSubmittingTenantMaintenance, setIsSubmittingTenantMaintenance] = useState(false);
-  const [payingBillId, setPayingBillId] = useState('');
-  const [isSubmittingAnnouncement, setIsSubmittingAnnouncement] = useState(false);
-  const [deletingAnnouncementId, setDeletingAnnouncementId] = useState('');
+  const [isSubmittingTenantMaintenance, setIsSubmittingTenantMaintenance] =
+    useState(false);
+  const [payingBillId, setPayingBillId] = useState("");
+  const [isSubmittingAnnouncement, setIsSubmittingAnnouncement] =
+    useState(false);
+  const [deletingAnnouncementId, setDeletingAnnouncementId] = useState("");
   const [isSubmittingTenant, setIsSubmittingTenant] = useState(false);
-  const [deletingTenantId, setDeletingTenantId] = useState('');
+  const [deletingTenantId, setDeletingTenantId] = useState("");
   const [isSubmittingRoom, setIsSubmittingRoom] = useState(false);
-  const [deletingRoomId, setDeletingRoomId] = useState('');
-  const [isSubmittingGenerateBill, setIsSubmittingGenerateBill] = useState(false);
-  const [updatingBillId, setUpdatingBillId] = useState('');
-  const [updatingRequestId, setUpdatingRequestId] = useState('');
+  const [deletingRoomId, setDeletingRoomId] = useState("");
+  const [isSubmittingGenerateBill, setIsSubmittingGenerateBill] =
+    useState(false);
+  const [updatingBillId, setUpdatingBillId] = useState("");
+  const [updatingRequestId, setUpdatingRequestId] = useState("");
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
   // Initial load
@@ -71,7 +97,7 @@ function RootApp() {
         const data = await fetchAppState(u.role);
         setState(data);
       } catch {
-        setToken('');
+        setToken("");
       } finally {
         setIsAppLoading(false);
       }
@@ -85,7 +111,7 @@ function RootApp() {
       const data = await fetchAppState(currentUser.role);
       setState(data);
     } catch (e) {
-      console.error('Failed to refresh data', e);
+      console.error("Failed to refresh data", e);
     }
   };
 
@@ -99,8 +125,10 @@ function RootApp() {
   }, [currentUser]);
 
   useEffect(() => {
-    document.body.className = currentUser ? 'app-mode' : 'auth-mode';
-    document.title = currentUser ? `Smart Dorm | ${pageTitleMap[currentUser.role][route].title}` : 'Smart Dorm | Sign In';
+    document.body.className = currentUser ? "app-mode" : "auth-mode";
+    document.title = currentUser
+      ? `Smart Dorm | ${pageTitleMap[currentUser.role][route].title}`
+      : "Smart Dorm | Sign In";
   }, [currentUser, route]);
 
   useEffect(() => {
@@ -111,16 +139,21 @@ function RootApp() {
 
   useEffect(() => {
     if (!currentUser) {
-      setRoute('dashboard');
+      setRoute("dashboard");
       return;
     }
-    const allowedRoutes = routeDefinitions[currentUser.role].map((item) => item.key);
+    const allowedRoutes = routeDefinitions[currentUser.role].map(
+      (item) => item.key,
+    );
     if (!allowedRoutes.includes(route)) {
       setRoute(allowedRoutes[0]);
     }
   }, [currentUser, route]);
 
-  const showFlash = (message: string, tone: 'success' | 'info' | 'danger' = 'info') => {
+  const showFlash = (
+    message: string,
+    tone: "success" | "info" | "danger" = "info",
+  ) => {
     setFlash({ message, tone });
   };
 
@@ -128,31 +161,45 @@ function RootApp() {
     event.preventDefault();
     setIsLoggingIn(true);
     const formData = new FormData(event.currentTarget);
-    const username = String(formData.get('username') || '').trim();
-    const password = String(formData.get('password') || '').trim();
-    
+    const username = String(formData.get("username") || "").trim();
+    const password = String(formData.get("password") || "").trim();
+
     try {
       const resp = await api.auth.login({ username, password });
       setToken(resp.token);
       setCurrentUser(resp.user);
       const data = await fetchAppState(resp.user.role);
       setState(data);
-      setRoute(routeDefinitions[resp.user.role as 'admin' | 'tenant'][0].key);
-      showFlash(`เข้าสู่ระบบในบทบาท${getRoleLabel(resp.user.role)}สำเร็จ`, 'success');
+      setRoute(routeDefinitions[resp.user.role as "admin" | "tenant"][0].key);
+      showFlash(
+        `เข้าสู่ระบบในบทบาท${getRoleLabel(resp.user.role)}สำเร็จ`,
+        "success",
+      );
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'danger');
+      showFlash(
+        error instanceof Error
+          ? error.message
+          : "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
+        "danger",
+      );
     } finally {
       setIsLoggingIn(false);
     }
   };
 
   const handleLogout = () => {
-    if (!window.confirm('ต้องการออกจากระบบใช่หรือไม่?')) return;
-    setToken('');
+    if (!window.confirm("ต้องการออกจากระบบใช่หรือไม่?")) return;
+    setToken("");
     setCurrentUser(null);
-    setState({ users: [], rooms: [], announcements: [], bills: [], maintenanceRequests: [] });
-    setEditingRoomId('');
-    setEditingTenantId('');
+    setState({
+      users: [],
+      rooms: [],
+      announcements: [],
+      bills: [],
+      maintenanceRequests: [],
+    });
+    setEditingRoomId("");
+    setEditingTenantId("");
   };
 
   const handleTenantMaintenance = async (event: FormEvent<HTMLFormElement>) => {
@@ -161,49 +208,69 @@ function RootApp() {
     if (!currentUser) return;
     const room = getRoomById(state, currentUser.roomId);
     if (!room) {
-      showFlash('บัญชีนี้ยังไม่ได้ผูกกับห้องพัก จึงยังไม่สามารถส่งคำร้องแจ้งซ่อมได้', 'danger');
+      showFlash(
+        "บัญชีนี้ยังไม่ได้ผูกกับห้องพัก จึงยังไม่สามารถส่งคำร้องแจ้งซ่อมได้",
+        "danger",
+      );
       return;
     }
     setIsSubmittingTenantMaintenance(true);
     try {
       const formData = new FormData(event.currentTarget);
-      const residentImage = await readImageFile((event.currentTarget.elements.namedItem('residentImage') as HTMLInputElement)?.files?.[0] || null);
-      
+      const residentImage = await readImageFile(
+        (
+          event.currentTarget.elements.namedItem(
+            "residentImage",
+          ) as HTMLInputElement
+        )?.files?.[0] || null,
+      );
+
       await api.maintenance.create({
-        title: String(formData.get('title') || '').trim(),
-        category: String(formData.get('category') || '').trim(),
-        description: String(formData.get('description') || '').trim(),
-        residentImage
+        title: String(formData.get("title") || "").trim(),
+        category: String(formData.get("category") || "").trim(),
+        description: String(formData.get("description") || "").trim(),
+        residentImage,
       });
 
       await refreshData();
       form.reset();
-      showFlash('ส่งคำร้องแจ้งซ่อมเรียบร้อยแล้ว', 'success');
+      showFlash("ส่งคำร้องแจ้งซ่อมเรียบร้อยแล้ว", "success");
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
       setIsSubmittingTenantMaintenance(false);
     }
   };
 
-  const handlePayBill = async (event: FormEvent<HTMLFormElement>, billId: string) => {
+  const handlePayBill = async (
+    event: FormEvent<HTMLFormElement>,
+    billId: string,
+  ) => {
     event.preventDefault();
     setPayingBillId(billId);
     try {
-      const fileInput = event.currentTarget.elements.namedItem('slipImage') as HTMLInputElement;
+      const fileInput = event.currentTarget.elements.namedItem(
+        "slipImage",
+      ) as HTMLInputElement;
       const slipImage = await readImageFile(fileInput.files?.[0] || null);
       if (!slipImage) {
-        showFlash('กรุณาแนบสลิปการชำระเงิน', 'danger');
+        showFlash("กรุณาแนบสลิปการชำระเงิน", "danger");
         return;
       }
-      
-      await api.bills.update(billId, { status: 'submitted', slipImage });
+
+      await api.bills.update(billId, { status: "submitted", slipImage });
       await refreshData();
-      showFlash('อัปโหลดหลักฐานการชำระเงินเรียบร้อย', 'success');
+      showFlash("อัปโหลดหลักฐานการชำระเงินเรียบร้อย", "success");
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
-      setPayingBillId('');
+      setPayingBillId("");
     }
   };
 
@@ -213,23 +280,26 @@ function RootApp() {
     setIsSubmittingAnnouncement(true);
     try {
       const formData = new FormData(event.currentTarget);
-      const title = String(formData.get('title') || '').trim();
-      const message = String(formData.get('message') || '').trim();
+      const title = String(formData.get("title") || "").trim();
+      const message = String(formData.get("message") || "").trim();
       if (!title || !message) {
-        showFlash('กรุณากรอกหัวข้อและรายละเอียดประกาศให้ครบถ้วน', 'danger');
+        showFlash("กรุณากรอกหัวข้อและรายละเอียดประกาศให้ครบถ้วน", "danger");
         return;
       }
-      
+
       await api.announcements.create({
         title,
         message,
-        priority: String(formData.get('priority') || 'low')
+        priority: String(formData.get("priority") || "low"),
       });
       await refreshData();
       form.reset();
-      showFlash('เผยแพร่ประกาศเรียบร้อยแล้ว', 'success');
+      showFlash("เผยแพร่ประกาศเรียบร้อยแล้ว", "success");
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
       setIsSubmittingAnnouncement(false);
     }
@@ -241,62 +311,75 @@ function RootApp() {
     setIsSubmittingTenant(true);
     try {
       const formData = new FormData(event.currentTarget);
-      const tenantId = String(formData.get('tenantId') || '');
-      const fullName = String(formData.get('fullName') || '').trim();
-      const phone = String(formData.get('phone') || '').trim();
-      const roomId = String(formData.get('roomId') || '').trim();
-      const password = String(formData.get('password') || '').trim();
+      const tenantId = String(formData.get("tenantId") || "");
+      const fullName = String(formData.get("fullName") || "").trim();
+      const phone = String(formData.get("phone") || "").trim();
+      const roomId = String(formData.get("roomId") || "").trim();
+      const password = String(formData.get("password") || "").trim();
 
       if (!roomId) {
-        throw new Error('กรุณากำหนดห้องพักให้ผู้เช่า (ต้องมีห้องจึงจะเข้าใช้งานได้)');
+        throw new Error(
+          "กรุณากำหนดห้องพักให้ผู้เช่า (ต้องมีห้องจึงจะเข้าใช้งานได้)",
+        );
       }
       const targetRoom = getRoomById(state, roomId);
       if (!targetRoom) {
-        throw new Error('ไม่พบข้อมูลห้องพักที่เลือก');
+        throw new Error("ไม่พบข้อมูลห้องพักที่เลือก");
       }
       const username = targetRoom.number; // Use room block/number as username
-      
+
       if (tenantId) {
         const payload: any = { fullName, phone, roomId };
         if (password) payload.password = password;
         await api.users.update(tenantId, payload);
-        showFlash('อัปเดตข้อมูลผู้เช่าเรียบร้อย', 'success');
+        showFlash("อัปเดตข้อมูลผู้เช่าเรียบร้อย", "success");
       } else {
-        await api.users.create({ 
-          username, 
-          password: password || 'tenant123', 
-          fullName, 
-          phone, 
-          role: 'tenant', 
-          roomId 
+        await api.users.create({
+          username,
+          password: password || "tenant123",
+          fullName,
+          phone,
+          role: "tenant",
+          roomId,
         });
-        showFlash('เพิ่มผู้เช่าใหม่เรียบร้อย', 'success');
+        showFlash("เพิ่มผู้เช่าใหม่เรียบร้อย", "success");
       }
-      
-      setEditingTenantId('');
+
+      setEditingTenantId("");
       await refreshData();
       form.reset();
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
       setIsSubmittingTenant(false);
     }
   };
 
-  const handleTenantChangePassword = async (event: FormEvent<HTMLFormElement>) => {
+  const handleTenantChangePassword = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault();
     const form = event.currentTarget;
     if (!currentUser) return;
     setIsSubmittingPassword(true);
     try {
-      const password = String(new FormData(event.currentTarget).get('password') || '').trim();
-      if (!password || password.length < 6) throw new Error('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
-      
+      const password = String(
+        new FormData(event.currentTarget).get("password") || "",
+      ).trim();
+      if (!password || password.length < 6)
+        throw new Error("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+
       await api.users.update(currentUser.id, { password });
-      showFlash('เปลี่ยนรหัสผ่านเรียบร้อยแล้ว', 'success');
+      showFlash("เปลี่ยนรหัสผ่านเรียบร้อยแล้ว", "success");
       form.reset();
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
       setIsSubmittingPassword(false);
     }
@@ -308,25 +391,30 @@ function RootApp() {
     setIsSubmittingRoom(true);
     try {
       const formData = new FormData(event.currentTarget);
-      const roomId = String(formData.get('roomId') || '');
-      const number = String(formData.get('number') || '').trim();
-      const type = String(formData.get('type') || '').trim();
-      const status = String(formData.get('status') || 'available') as RoomStatus;
-      const baseRent = Number(formData.get('baseRent') || 0);
-      
+      const roomId = String(formData.get("roomId") || "");
+      const number = String(formData.get("number") || "").trim();
+      const type = String(formData.get("type") || "").trim();
+      const status = String(
+        formData.get("status") || "available",
+      ) as RoomStatus;
+      const baseRent = Number(formData.get("baseRent") || 0);
+
       if (roomId) {
         await api.rooms.update(roomId, { number, type, status, baseRent });
-        showFlash('อัปเดตข้อมูลห้องพักเรียบร้อย', 'success');
+        showFlash("อัปเดตข้อมูลห้องพักเรียบร้อย", "success");
       } else {
         await api.rooms.create({ number, type, status, baseRent });
-        showFlash('เพิ่มห้องพักเรียบร้อย', 'success');
+        showFlash("เพิ่มห้องพักเรียบร้อย", "success");
       }
-      
-      setEditingRoomId('');
+
+      setEditingRoomId("");
       await refreshData();
       form.reset();
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
       setIsSubmittingRoom(false);
     }
@@ -337,15 +425,16 @@ function RootApp() {
     const form = event.currentTarget;
     setIsSubmittingGenerateBill(true);
     const formData = new FormData(event.currentTarget);
-    const roomId = String(formData.get('roomId') || '');
-    const month = String(formData.get('month') || currentMonth);
-    const waterUnits = Number(formData.get('waterUnits') || 0);
-    const electricityUnits = Number(formData.get('electricityUnits') || 0);
-    const dueDate = String(formData.get('dueDate') || toDateInput(today));
-    
+    const roomId = String(formData.get("roomId") || "");
+    const month = String(formData.get("month") || currentMonth);
+    const waterUnits = Number(formData.get("waterUnits") || 0);
+    const electricityUnits = Number(formData.get("electricityUnits") || 0);
+    const dueDate = String(formData.get("dueDate") || toDateInput(today));
+
     try {
       const room = getRoomById(state, roomId);
-      if (!room || !room.tenantId) throw new Error('กรุณาเลือกห้องที่มีผู้เช่าอยู่');
+      if (!room || !room.tenantId)
+        throw new Error("กรุณาเลือกห้องที่มีผู้เช่าอยู่");
 
       await api.bills.create({
         roomId,
@@ -355,104 +444,150 @@ function RootApp() {
         waterUnits,
         electricityUnits,
         dueDate,
-        qrReference: `SDM-${room.number}-${month.replace('-', '')}`
+        qrReference: `SDM-${room.number}-${month.replace("-", "")}`,
       });
-      
+
       await refreshData();
       form.reset();
-      showFlash('ออกบิลและส่งให้ผู้เช่าเรียบร้อย', 'success');
+      showFlash("ออกบิลและส่งให้ผู้เช่าเรียบร้อย", "success");
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
       setIsSubmittingGenerateBill(false);
     }
   };
 
-  const handleAdminBillStatus = async (event: FormEvent<HTMLFormElement>, billId: string) => {
+  const handleAdminBillStatus = async (
+    event: FormEvent<HTMLFormElement>,
+    billId: string,
+  ) => {
     event.preventDefault();
     setUpdatingBillId(billId);
     try {
-      const nextStatus = String(new FormData(event.currentTarget).get('status') || 'pending') as BillStatus;
+      const nextStatus = String(
+        new FormData(event.currentTarget).get("status") || "pending",
+      ) as BillStatus;
       await api.bills.update(billId, { status: nextStatus });
       await refreshData();
-      showFlash('อัปเดตสถานะบิลเรียบร้อย', 'success');
+      showFlash("อัปเดตสถานะบิลเรียบร้อย", "success");
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
-      setUpdatingBillId('');
+      setUpdatingBillId("");
     }
   };
 
-  const handleMaintenanceUpdate = async (event: FormEvent<HTMLFormElement>, requestId: string) => {
+  const handleMaintenanceUpdate = async (
+    event: FormEvent<HTMLFormElement>,
+    requestId: string,
+  ) => {
     event.preventDefault();
     setUpdatingRequestId(requestId);
     try {
       const formData = new FormData(event.currentTarget);
-      const completionImage = await readImageFile((event.currentTarget.elements.namedItem('completionImage') as HTMLInputElement)?.files?.[0] || null);
-      const status = String(formData.get('status')) as MaintenanceStatus;
-      const assignee = String(formData.get('assignee') || '').trim();
-      const adminNote = String(formData.get('adminNote') || '').trim();
+      const completionImage = await readImageFile(
+        (
+          event.currentTarget.elements.namedItem(
+            "completionImage",
+          ) as HTMLInputElement
+        )?.files?.[0] || null,
+      );
+      const status = String(formData.get("status")) as MaintenanceStatus;
+      const assignee = String(formData.get("assignee") || "").trim();
+      const adminNote = String(formData.get("adminNote") || "").trim();
 
       await api.maintenance.update(requestId, {
-        status, assignee, adminNote, 
-        ...(completionImage ? { completionImage } : {})
+        status,
+        assignee,
+        adminNote,
+        ...(completionImage ? { completionImage } : {}),
       });
-      
+
       await refreshData();
-      showFlash('อัปเดตคำร้องแจ้งซ่อมเรียบร้อย', 'success');
+      showFlash("อัปเดตคำร้องแจ้งซ่อมเรียบร้อย", "success");
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
-      setUpdatingRequestId('');
+      setUpdatingRequestId("");
     }
   };
 
   const deleteAnnouncement = async (announcementId: string) => {
-    if (!window.confirm('ต้องการลบประกาศนี้ใช่หรือไม่?')) return;
+    if (!window.confirm("ต้องการลบประกาศนี้ใช่หรือไม่?")) return;
     setDeletingAnnouncementId(announcementId);
     try {
       await api.announcements.delete(announcementId);
       await refreshData();
-      showFlash('ลบประกาศเรียบร้อย', 'success');
+      showFlash("ลบประกาศเรียบร้อย", "success");
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
+        "danger",
+      );
     } finally {
-      setDeletingAnnouncementId('');
+      setDeletingAnnouncementId("");
     }
   };
 
   const deleteTenant = async (tenantId: string) => {
-    if (!window.confirm('ต้องการลบข้อมูลผู้เช่ารายการนี้ใช่หรือไม่?')) return;
+    if (!window.confirm("ต้องการลบข้อมูลผู้เช่ารายการนี้ใช่หรือไม่?")) return;
     setDeletingTenantId(tenantId);
     try {
       await api.users.delete(tenantId);
       await refreshData();
-      showFlash('ลบข้อมูลผู้เช่าเรียบร้อย', 'success');
-      setEditingTenantId('');
+      showFlash("ลบข้อมูลผู้เช่าเรียบร้อย", "success");
+      setEditingTenantId("");
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'ไม่สามารถลบผู้เช่าได้', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "ไม่สามารถลบผู้เช่าได้",
+        "danger",
+      );
     } finally {
-      setDeletingTenantId('');
+      setDeletingTenantId("");
     }
   };
 
   const deleteRoom = async (roomId: string) => {
-    if (!window.confirm('ต้องการลบห้องพักรายการนี้ใช่หรือไม่?')) return;
+    if (!window.confirm("ต้องการลบห้องพักรายการนี้ใช่หรือไม่?")) return;
     setDeletingRoomId(roomId);
     try {
       await api.rooms.delete(roomId);
       await refreshData();
-      showFlash('ลบข้อมูลห้องพักเรียบร้อย', 'success');
-      setEditingRoomId('');
+      showFlash("ลบข้อมูลห้องพักเรียบร้อย", "success");
+      setEditingRoomId("");
     } catch (error) {
-      showFlash(error instanceof Error ? error.message : 'ไม่สามารถลบห้องได้', 'danger');
+      showFlash(
+        error instanceof Error ? error.message : "ไม่สามารถลบห้องได้",
+        "danger",
+      );
     } finally {
-      setDeletingRoomId('');
+      setDeletingRoomId("");
     }
   };
 
   if (isAppLoading) {
-    return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>Loading Smart Dorm...</div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          height: "100vh",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#6366f1",
+        }}
+      >
+        Loading Smart Dorm...
+      </div>
+    );
   }
 
   const flashNode = <FlashMessage flash={flash} />;
@@ -474,41 +609,190 @@ function RootApp() {
   const currentRoom = getTenantRoom(state, currentUser);
   const tenantBills = getBillsForTenant(state, currentUser.id);
   const tenantRequests = getMaintenanceForTenant(state, currentUser.id);
-  const overviewCards = currentUser.role === 'tenant'
-    ? [
-        { label: 'ยอดค้างชำระปัจจุบัน', value: formatCurrency(getTenantOutstandingAmount(state, currentUser.id)), description: 'รวมบิลที่ยังไม่ถูกปิดสถานะทั้งหมด' },
-        { label: 'ห้องพัก', value: currentRoom?.number || 'ยังไม่ผูกห้อง', description: currentRoom ? `${currentRoom.type} | ค่าเช่าพื้นฐาน ${formatCurrency(currentRoom.baseRent)}` : 'สามารถกำหนดผ่านฝั่งผู้ดูแลอาคารได้' },
-        { label: 'คำร้องที่ยังไม่เสร็จ', value: String(tenantRequests.filter((request) => request.status !== 'resolved').length), description: 'ติดตามสถานะงานซ่อมได้จากหน้าแจ้งซ่อม' },
-        { label: 'ประวัติบิลทั้งหมด', value: String(tenantBills.length), description: 'รองรับการดูย้อนหลังและอัปโหลดสลิปการโอนเงิน' }
-      ]
-    : [
-        { label: 'รายรับเดือนปัจจุบัน', value: formatCurrency(state.bills.filter((bill) => bill.month === currentMonth && bill.status === 'paid').reduce((sum, bill) => sum + getBillTotal(bill), 0)), description: 'คำนวณจากบิลที่ชำระแล้วในเดือนนี้' },
-        { label: 'บิลที่ยังไม่ปิด', value: String(state.bills.filter((bill) => bill.month === currentMonth && bill.status !== 'paid').length), description: 'รวมบิลรอชำระ รอตรวจสอบ และเกินกำหนด' },
-        { label: 'ห้องที่มีผู้พัก', value: `${state.rooms.filter((room) => room.tenantId).length}/${state.rooms.length}`, description: 'ภาพรวมอัตราการเข้าพักในหอพัก' },
-        { label: 'งานซ่อมที่ยังค้าง', value: String(state.maintenanceRequests.filter((request) => request.status !== 'resolved').length), description: 'ช่วยติดตาม SLA ของทีมช่างและผู้ดูแลอาคาร' }
-      ];
+  const overviewCards =
+    currentUser.role === "tenant"
+      ? [
+          {
+            label: "ยอดค้างชำระปัจจุบัน",
+            value: formatCurrency(
+              getTenantOutstandingAmount(state, currentUser.id),
+            ),
+            description: "รวมบิลที่ยังไม่ถูกปิดสถานะทั้งหมด",
+          },
+          {
+            label: "ห้องพัก",
+            value: currentRoom?.number || "ยังไม่ผูกห้อง",
+            description: currentRoom
+              ? `${currentRoom.type} | ค่าเช่าพื้นฐาน ${formatCurrency(currentRoom.baseRent)}`
+              : "สามารถกำหนดผ่านฝั่งผู้ดูแลอาคารได้",
+          },
+          {
+            label: "คำร้องที่ยังไม่เสร็จ",
+            value: String(
+              tenantRequests.filter((request) => request.status !== "resolved")
+                .length,
+            ),
+            description: "ติดตามสถานะงานซ่อมได้จากหน้าแจ้งซ่อม",
+          },
+          {
+            label: "ประวัติบิลทั้งหมด",
+            value: String(tenantBills.length),
+            description: "รองรับการดูย้อนหลังและอัปโหลดสลิปการโอนเงิน",
+          },
+        ]
+      : [
+          {
+            label: "รายรับเดือนปัจจุบัน",
+            value: formatCurrency(
+              state.bills
+                .filter(
+                  (bill) =>
+                    bill.month === currentMonth && bill.status === "paid",
+                )
+                .reduce((sum, bill) => sum + getBillTotal(bill), 0),
+            ),
+            description: "คำนวณจากบิลที่ชำระแล้วในเดือนนี้",
+          },
+          {
+            label: "บิลที่ยังไม่ปิด",
+            value: String(
+              state.bills.filter(
+                (bill) => bill.month === currentMonth && bill.status !== "paid",
+              ).length,
+            ),
+            description: "รวมบิลรอชำระ รอตรวจสอบ และเกินกำหนด",
+          },
+          {
+            label: "ห้องที่มีผู้พัก",
+            value: `${state.rooms.filter((room) => room.tenantId).length}/${state.rooms.length}`,
+            description: "ภาพรวมอัตราการเข้าพักในหอพัก",
+          },
+          {
+            label: "งานซ่อมที่ยังค้าง",
+            value: String(
+              state.maintenanceRequests.filter(
+                (request) => request.status !== "resolved",
+              ).length,
+            ),
+            description: "ช่วยติดตาม SLA ของทีมช่างและผู้ดูแลอาคาร",
+          },
+        ];
 
   let content: ReactNode = null;
-  if (currentUser.role === 'tenant') {
-    if (route === 'dashboard') {
-      content = <TenantDashboardView room={currentRoom} bills={tenantBills} requests={tenantRequests} latestAnnouncement={getLatestAnnouncements(state, 1)[0] || null} getRoomName={(roomId) => getRoomName(state, roomId)} onNavigateBills={() => setRoute('bills')} onNavigateMaintenance={() => setRoute('maintenance')} onNavigateAnnouncements={() => setRoute('announcements')} isSubmittingPassword={isSubmittingPassword} onChangePassword={handleTenantChangePassword} />;
-    } else if (route === 'bills') {
-      content = <TenantBillsView bills={tenantBills} getRoomName={(roomId) => getRoomName(state, roomId)} payingBillId={payingBillId} onPayBill={handlePayBill} />;
-    } else if (route === 'maintenance') {
-      content = <TenantMaintenanceView room={currentRoom} requests={tenantRequests} isSubmitting={isSubmittingTenantMaintenance} onSubmit={handleTenantMaintenance} />;
+  if (currentUser.role === "tenant") {
+    if (route === "dashboard") {
+      content = (
+        <TenantDashboardView
+          room={currentRoom}
+          bills={tenantBills}
+          requests={tenantRequests}
+          latestAnnouncement={getLatestAnnouncements(state, 1)[0] || null}
+          getRoomName={(roomId) => getRoomName(state, roomId)}
+          onNavigateBills={() => setRoute("bills")}
+          onNavigateMaintenance={() => setRoute("maintenance")}
+          onNavigateAnnouncements={() => setRoute("announcements")}
+          isSubmittingPassword={isSubmittingPassword}
+          onChangePassword={handleTenantChangePassword}
+        />
+      );
+    } else if (route === "bills") {
+      content = (
+        <TenantBillsView
+          bills={tenantBills}
+          getRoomName={(roomId) => getRoomName(state, roomId)}
+          payingBillId={payingBillId}
+          onPayBill={handlePayBill}
+        />
+      );
+    } else if (route === "maintenance") {
+      content = (
+        <TenantMaintenanceView
+          room={currentRoom}
+          requests={tenantRequests}
+          isSubmitting={isSubmittingTenantMaintenance}
+          onSubmit={handleTenantMaintenance}
+        />
+      );
     } else {
-      content = <AnnouncementsView adminTools={false} announcements={latestAnnouncements} deletingAnnouncementId={deletingAnnouncementId} isSubmitting={isSubmittingAnnouncement} onSubmit={handleAnnouncement} onDelete={deleteAnnouncement} />;
+      content = (
+        <AnnouncementsView
+          adminTools={false}
+          announcements={latestAnnouncements}
+          deletingAnnouncementId={deletingAnnouncementId}
+          isSubmitting={isSubmittingAnnouncement}
+          onSubmit={handleAnnouncement}
+          onDelete={deleteAnnouncement}
+        />
+      );
     }
-  } else if (route === 'dashboard') {
+  } else if (route === "dashboard") {
     content = <AdminDashboardView state={state} />;
-  } else if (route === 'occupancy') {
-    content = <AdminOccupancyView rooms={[...state.rooms].sort((left, right) => left.number.localeCompare(right.number))} tenants={getTenantUsers(state).sort((left, right) => left.fullName.localeCompare(right.fullName, 'th'))} editingRoom={editingRoomId ? getRoomById(state, editingRoomId) : null} editingTenant={editingTenantId ? getUserById(state, editingTenantId) : null} deletingRoomId={deletingRoomId} deletingTenantId={deletingTenantId} getAssignableRoomsForTenant={(tenantId) => getAssignableRoomsForTenant(state, tenantId)} getRoomName={(roomId) => getRoomName(state, roomId)} getRoomDisplayStatus={getRoomDisplayStatus} getUserName={(userId) => getUserName(state, userId)} isSubmittingRoom={isSubmittingRoom} isSubmittingTenant={isSubmittingTenant} onSubmitTenant={handleTenantUpsert} onSubmitRoom={handleRoomUpsert} onEditTenant={setEditingTenantId} onDeleteTenant={deleteTenant} onEditRoom={setEditingRoomId} onDeleteRoom={deleteRoom} onClearTenantForm={() => setEditingTenantId('')} onClearRoomForm={() => setEditingRoomId('')} />;
-  } else if (route === 'billing') {
-    content = <AdminBillingView state={state} getUserName={(userId) => getUserName(state, userId)} getRoomName={(roomId) => getRoomName(state, roomId)} isSubmittingGenerateBill={isSubmittingGenerateBill} updatingBillId={updatingBillId} onSubmitGenerateBill={handleGenerateBill} onSubmitBillStatus={handleAdminBillStatus} />;
-  } else if (route === 'maintenance') {
-    content = <AdminMaintenanceView requests={state.maintenanceRequests} getRoomName={(roomId) => getRoomName(state, roomId)} getUserName={(userId) => getUserName(state, userId)} updatingRequestId={updatingRequestId} onSubmit={handleMaintenanceUpdate} />;
+  } else if (route === "occupancy") {
+    content = (
+      <AdminOccupancyView
+        rooms={[...state.rooms].sort((left, right) =>
+          left.number.localeCompare(right.number),
+        )}
+        tenants={getTenantUsers(state).sort((left, right) =>
+          left.fullName.localeCompare(right.fullName, "th"),
+        )}
+        editingRoom={editingRoomId ? getRoomById(state, editingRoomId) : null}
+        editingTenant={
+          editingTenantId ? getUserById(state, editingTenantId) : null
+        }
+        deletingRoomId={deletingRoomId}
+        deletingTenantId={deletingTenantId}
+        getAssignableRoomsForTenant={(tenantId) =>
+          getAssignableRoomsForTenant(state, tenantId)
+        }
+        getRoomName={(roomId) => getRoomName(state, roomId)}
+        getRoomDisplayStatus={getRoomDisplayStatus}
+        getUserName={(userId) => getUserName(state, userId)}
+        isSubmittingRoom={isSubmittingRoom}
+        isSubmittingTenant={isSubmittingTenant}
+        onSubmitTenant={handleTenantUpsert}
+        onSubmitRoom={handleRoomUpsert}
+        onEditTenant={setEditingTenantId}
+        onDeleteTenant={deleteTenant}
+        onEditRoom={setEditingRoomId}
+        onDeleteRoom={deleteRoom}
+        onClearTenantForm={() => setEditingTenantId("")}
+        onClearRoomForm={() => setEditingRoomId("")}
+      />
+    );
+  } else if (route === "billing") {
+    content = (
+      <AdminBillingView
+        state={state}
+        getUserName={(userId) => getUserName(state, userId)}
+        getRoomName={(roomId) => getRoomName(state, roomId)}
+        isSubmittingGenerateBill={isSubmittingGenerateBill}
+        updatingBillId={updatingBillId}
+        onSubmitGenerateBill={handleGenerateBill}
+        onSubmitBillStatus={handleAdminBillStatus}
+      />
+    );
+  } else if (route === "maintenance") {
+    content = (
+      <AdminMaintenanceView
+        requests={state.maintenanceRequests}
+        getRoomName={(roomId) => getRoomName(state, roomId)}
+        getUserName={(userId) => getUserName(state, userId)}
+        updatingRequestId={updatingRequestId}
+        onSubmit={handleMaintenanceUpdate}
+      />
+    );
   } else {
-    content = <AnnouncementsView adminTools announcements={latestAnnouncements} deletingAnnouncementId={deletingAnnouncementId} isSubmitting={isSubmittingAnnouncement} onSubmit={handleAnnouncement} onDelete={deleteAnnouncement} />;
+    content = (
+      <AnnouncementsView
+        adminTools
+        announcements={latestAnnouncements}
+        deletingAnnouncementId={deletingAnnouncementId}
+        isSubmitting={isSubmittingAnnouncement}
+        onSubmit={handleAnnouncement}
+        onDelete={deleteAnnouncement}
+      />
+    );
   }
 
   return (

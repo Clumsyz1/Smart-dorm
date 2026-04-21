@@ -30,7 +30,11 @@
   --nav-active-bg: rgba(99, 102, 241, 0.08);
   --nav-active-border: rgba(99, 102, 241, 0.18);
   --badge-bg: linear-gradient(135deg, #6366f1, #a855f7);
-  --avatar-bg: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+  --avatar-bg: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.1),
+    rgba(168, 85, 247, 0.1)
+  );
   --avatar-color: #6366f1;
   --eyebrow-bg: rgba(99, 102, 241, 0.07);
   --eyebrow-color: #6366f1;
@@ -39,13 +43,20 @@
   --qr-filled: #4338ca;
 
   /* Auth page tokens — light */
-  --auth-bg: linear-gradient(160deg, #f8f7f4 0%, #ede9fe 40%, #e0f2fe 70%, #fce7f3 100%);
+  --auth-bg: linear-gradient(
+    160deg,
+    #f8f7f4 0%,
+    #ede9fe 40%,
+    #e0f2fe 70%,
+    #fce7f3 100%
+  );
   --auth-orb1: rgba(99, 102, 241, 0.2);
   --auth-orb2: rgba(20, 184, 166, 0.18);
   --auth-orb3: rgba(168, 85, 247, 0.15);
   --auth-card-bg: rgba(255, 255, 255, 0.78);
   --auth-card-border: rgba(99, 102, 241, 0.12);
-  --auth-card-shadow: 0 32px 64px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --auth-card-shadow:
+    0 32px 64px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --auth-text: #1e1b4b;
   --auth-subtitle: #8b83a8;
   --auth-input-bg: rgba(255, 255, 255, 0.92);
@@ -97,7 +108,11 @@
   --nav-active-bg: rgba(139, 92, 246, 0.12);
   --nav-active-border: rgba(139, 92, 246, 0.24);
   --badge-bg: linear-gradient(135deg, #8b5cf6, #ec4899);
-  --avatar-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(236, 72, 153, 0.18));
+  --avatar-bg: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.18),
+    rgba(236, 72, 153, 0.18)
+  );
   --avatar-color: #a78bfa;
   --eyebrow-bg: rgba(139, 92, 246, 0.12);
   --eyebrow-color: #a78bfa;
@@ -112,7 +127,8 @@
   --auth-orb3: rgba(236, 72, 153, 0.3);
   --auth-card-bg: rgba(255, 255, 255, 0.06);
   --auth-card-border: rgba(139, 92, 246, 0.15);
-  --auth-card-shadow: 0 32px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --auth-card-shadow:
+    0 32px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --auth-text: #f5f0ff;
   --auth-subtitle: rgba(200, 190, 225, 0.6);
   --auth-input-bg: rgba(255, 255, 255, 0.05);
@@ -165,7 +181,11 @@
     --nav-active-bg: rgba(139, 92, 246, 0.12);
     --nav-active-border: rgba(139, 92, 246, 0.24);
     --badge-bg: linear-gradient(135deg, #8b5cf6, #ec4899);
-    --avatar-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(236, 72, 153, 0.18));
+    --avatar-bg: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.18),
+      rgba(236, 72, 153, 0.18)
+    );
     --avatar-color: #a78bfa;
     --eyebrow-bg: rgba(139, 92, 246, 0.12);
     --eyebrow-color: #a78bfa;
@@ -179,7 +199,8 @@
     --auth-orb3: rgba(236, 72, 153, 0.3);
     --auth-card-bg: rgba(255, 255, 255, 0.06);
     --auth-card-border: rgba(139, 92, 246, 0.15);
-    --auth-card-shadow: 0 32px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --auth-card-shadow:
+      0 32px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     --auth-text: #f5f0ff;
     --auth-subtitle: rgba(200, 190, 225, 0.6);
     --auth-input-bg: rgba(255, 255, 255, 0.05);
@@ -210,7 +231,9 @@
 
 html {
   scroll-behavior: smooth;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 body {
@@ -220,7 +243,9 @@ body {
   line-height: 1.5;
   background: var(--body-bg);
   color: var(--text);
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 body.auth-mode {
@@ -258,7 +283,9 @@ a {
   background: var(--panel-bg);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  transition: background 0.3s ease, border-color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease;
   box-shadow: var(--shadow-soft);
   padding: 24px;
 }
@@ -316,7 +343,6 @@ a {
 }
 
 @keyframes auth-float {
-
   0%,
   100% {
     transform: translateY(0) scale(1);
@@ -341,7 +367,10 @@ a {
   -webkit-backdrop-filter: blur(24px);
   box-shadow: var(--auth-card-shadow);
   animation: auth-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 @keyframes auth-enter {
@@ -563,8 +592,8 @@ a {
   line-height: 1.6;
 }
 
-.panel-heading>div,
-.list-item>div {
+.panel-heading > div,
+.list-item > div {
   min-width: 0;
 }
 
@@ -1319,9 +1348,15 @@ textarea {
 }
 
 /* ─── Mobile Menu Styles ─── */
-.sidebar-overlay { display: none; }
-.hamburger-btn { display: none; }
-.hamburger-close-btn { display: none; }
+.sidebar-overlay {
+  display: none;
+}
+.hamburger-btn {
+  display: none;
+}
+.hamburger-close-btn {
+  display: none;
+}
 .sidebar-mobile-header {
   display: flex;
   justify-content: space-between;
@@ -1351,7 +1386,9 @@ textarea {
     color: var(--text);
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.2s ease, transform 0.2s ease;
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease;
   }
 
   .hamburger-btn:active {
@@ -1409,7 +1446,6 @@ textarea {
 }
 
 @media (max-width: 980px) {
-
   .content-grid.two-columns,
   .content-grid.three-columns,
   .form-grid,
