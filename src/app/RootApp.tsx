@@ -59,7 +59,7 @@ function RootApp() {
     maintenanceRequests: [],
   });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAppLoading, setIsAppLoading] = useState(true);
+  const [isAppLoading, setIsAppLoading] = useState(false);
 
   const [route, setRoute] = useState<AppRoute>("dashboard");
   const [editingTenantId, setEditingTenantId] = useState("");
@@ -106,7 +106,7 @@ function RootApp() {
   }, []);
 
   const refreshData = async () => {
-    if (!currentUser) return;
+    if (!currentUser || !getToken()) return;
     try {
       const data = await fetchAppState(currentUser.role);
       setState(data);
@@ -115,9 +115,9 @@ function RootApp() {
     }
   };
 
-  // Realtime Polling (Every 5 seconds)
+  // Realtime Polling (Every 5 seconds) — only if real token exists
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || !getToken()) return;
     const interval = setInterval(() => {
       refreshData();
     }, 5000);
@@ -156,7 +156,6 @@ function RootApp() {
   ) => {
     setFlash({ message, tone });
   };
-
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoggingIn(true);
@@ -726,7 +725,14 @@ function RootApp() {
       );
     }
   } else if (route === "dashboard") {
-    content = <AdminDashboardView state={state} />;
+    content = (
+      <AdminDashboardView
+        state={state}
+        onNavigateBilling={() => setRoute("billing")}
+        onNavigateMaintenance={() => setRoute("maintenance")}
+        onNavigateAnnouncements={() => setRoute("announcements")}
+      />
+    );
   } else if (route === "occupancy") {
     content = (
       <AdminOccupancyView
@@ -812,5 +818,6 @@ function RootApp() {
     </AppShell>
   );
 }
+
 
 export default RootApp;

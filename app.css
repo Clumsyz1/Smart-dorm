@@ -1,3 +1,85 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--t-background);
+  --color-foreground: var(--t-foreground);
+  --color-card: var(--t-card);
+  --color-card-foreground: var(--t-foreground);
+  --color-border: var(--t-border);
+  --color-muted: var(--t-muted);
+  --color-muted-foreground: var(--t-muted-foreground);
+  --color-primary: var(--t-primary);
+  --color-primary-foreground: var(--t-primary-foreground);
+  --color-accent: var(--t-accent);
+  --color-accent-foreground: var(--t-accent-foreground);
+  --color-warning: var(--t-warning);
+  --color-warning-foreground: var(--t-warning-foreground);
+  --color-destructive: var(--t-destructive);
+  --color-destructive-foreground: #ffffff;
+  --color-success: var(--t-success);
+  --color-success-foreground: #ffffff;
+  --color-info: var(--t-info);
+  --color-info-foreground: #ffffff;
+  --radius: 0.75rem;
+}
+
+:root,
+[data-theme="light"] {
+  --t-background: #f8f7f4;
+  --t-foreground: #1e1b4b;
+  --t-card: #ffffff;
+  --t-border: #e5e7eb;
+  --t-muted: #f0eef5;
+  --t-muted-foreground: #6b7280;
+  --t-primary: #6366f1;
+  --t-primary-foreground: #ffffff;
+  --t-accent: #06b6d4;
+  --t-accent-foreground: #083344;
+  --t-warning: #f59e0b;
+  --t-warning-foreground: #78350f;
+  --t-destructive: #ef4444;
+  --t-success: #10b981;
+  --t-info: #3b82f6;
+}
+
+[data-theme="dark"] {
+  --t-background: #0f0e17;
+  --t-foreground: #f5f0ff;
+  --t-card: #1a1827;
+  --t-border: #2d2a3d;
+  --t-muted: #231f35;
+  --t-muted-foreground: #a89fc4;
+  --t-primary: #a78bfa;
+  --t-primary-foreground: #1e1b4b;
+  --t-accent: #22d3ee;
+  --t-accent-foreground: #083344;
+  --t-warning: #fbbf24;
+  --t-warning-foreground: #78350f;
+  --t-destructive: #f87171;
+  --t-success: #34d399;
+  --t-info: #60a5fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --t-background: #0f0e17;
+    --t-foreground: #f5f0ff;
+    --t-card: #1a1827;
+    --t-border: #2d2a3d;
+    --t-muted: #231f35;
+    --t-muted-foreground: #a89fc4;
+    --t-primary: #a78bfa;
+    --t-primary-foreground: #1e1b4b;
+    --t-accent: #22d3ee;
+    --t-accent-foreground: #083344;
+    --t-warning: #fbbf24;
+    --t-warning-foreground: #78350f;
+    --t-destructive: #f87171;
+    --t-success: #34d399;
+    --t-info: #60a5fa;
+  }
+}
+
 /* ─── Theme: Light (default) ─── */
 :root,
 [data-theme="light"] {
@@ -834,13 +916,13 @@ textarea {
 }
 
 .shell {
-  width: min(2000px, calc(100% - 32px));
+  width: min(2000px, 100%);
   margin: 0 auto;
   min-height: 100vh;
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr);
   gap: 20px;
-  padding: 20px 0;
+  padding: 20px;
 }
 
 .sidebar {
@@ -1445,6 +1527,14 @@ textarea {
   }
 }
 
+.room-actions-row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 @media (max-width: 980px) {
   .content-grid.two-columns,
   .content-grid.three-columns,
@@ -1460,8 +1550,20 @@ textarea {
 }
 
 @media (max-width: 640px) {
+  body {
+    padding: 0;
+  }
+
+  .shell {
+    padding: 12px;
+    gap: 12px;
+  }
+
   .auth-card {
-    padding: 32px 24px;
+    padding: 32px 20px;
+    width: 100%;
+    border-radius: 0;
+    min-height: 100vh;
   }
 
   .page-header,
@@ -1471,8 +1573,18 @@ textarea {
   .request-card,
   .announcement-card,
   .empty-state,
-  .sidebar {
-    padding: 20px;
+  .sidebar,
+  .panel {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    word-break: break-word;
+  }
+
+  .header-mobile-wrapper {
+    gap: 12px;
   }
 
   .list-item,
@@ -1484,13 +1596,43 @@ textarea {
   .inline-form {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .list-item-meta,
   .vertical-align {
-    align-items: center;
+    align-items: flex-start;
     flex-direction: row;
     flex-wrap: wrap;
-    margin-top: 4px; /* Give some breathing room from the text above */
+    margin-top: 8px;
+    gap: 8px;
+  }
+
+  .room-actions-row {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    margin-top: 8px;
+    gap: 8px;
+  }
+
+  .tabs-container {
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    justify-content: flex-start;
+  }
+
+  .tab-button {
+    flex: 0 0 auto;
+  }
+
+  .form-grid {
+    gap: 16px;
+  }
+
+  .main-area {
+    width: 100%;
+    min-width: 0;
   }
 }
