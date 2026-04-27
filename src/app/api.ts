@@ -43,6 +43,11 @@ export const api = {
         body: JSON.stringify(credentials),
       }),
     me: () => fetchWithAuth("/auth/me"),
+    changePassword: (data: any) =>
+      fetchWithAuth("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
   },
   users: {
     list: () => fetchWithAuth("/users"),

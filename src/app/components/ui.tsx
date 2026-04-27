@@ -1,3 +1,5 @@
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { getStatusLabel, getToneClass } from "../core";
 import type { FlashState } from "../types";
 
@@ -54,23 +56,54 @@ export function FlashMessage({ flash }: { flash: FlashState }) {
   );
 }
 
-export function PseudoQr({ reference }: { reference: string }) {
-  const cells = Array.from({ length: 121 }, (_, index) => {
-    const charCode = reference.charCodeAt(index % reference.length);
-    return (charCode + index * 7) % 5 < 2;
-  });
+export function PasswordInput({
+  name,
+  placeholder,
+  required,
+  disabled,
+  minLength,
+}: {
+  name: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  minLength?: number;
+}) {
+  const [show, setShow] = useState(false);
 
   return (
+    <div className="password-input-wrapper">
+      <input
+        name={name}
+        type={show ? "text" : "password"}
+        placeholder={placeholder}
+        required={required}
+        disabled={disabled}
+        minLength={minLength}
+        className="password-input"
+      />
+      <button
+        type="button"
+        className="password-toggle"
+        onClick={() => setShow(!show)}
+        tabIndex={-1}
+      >
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  );
+}
+
+export function QrPayment({ reference }: { reference: string }) {
+  return (
     <div className="qr-wrapper">
-      <div className="qr-grid">
-        {cells.map((isFilled, index) => (
-          <span
-            key={`${reference}-${index}`}
-            className={`qr-cell ${isFilled ? "is-filled" : ""}`}
-          />
-        ))}
+      <div className="qr-image-container">
+        <img src="/assets/payment_qr.png" alt="PromptPay QR Code" />
       </div>
-      <small>{reference}</small>
+      <div className="qr-info">
+        <span className="section-kicker">PromptPay Reference</span>
+        <strong>{reference}</strong>
+      </div>
     </div>
   );
 }

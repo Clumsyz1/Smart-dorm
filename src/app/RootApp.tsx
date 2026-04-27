@@ -25,6 +25,8 @@ import {
   routeDefinitions,
   toDateInput,
   today,
+  WATER_RATE,
+  ELECTRIC_RATE,
 } from "./core";
 import type {
   AppRoute,
@@ -80,6 +82,8 @@ function RootApp() {
   const [isSubmittingGenerateBill, setIsSubmittingGenerateBill] =
     useState(false);
   const [updatingBillId, setUpdatingBillId] = useState("");
+  const [editingBillId, setEditingBillId] = useState("");
+  const [deletingBillId, setDeletingBillId] = useState("");
   const [updatingRequestId, setUpdatingRequestId] = useState("");
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
@@ -136,6 +140,10 @@ function RootApp() {
     const timeout = window.setTimeout(() => setFlash(null), 3200);
     return () => window.clearTimeout(timeout);
   }, [flash]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
     if (!currentUser) {
@@ -365,13 +373,26 @@ function RootApp() {
     if (!currentUser) return;
     setIsSubmittingPassword(true);
     try {
-      const password = String(
-        new FormData(event.currentTarget).get("password") || "",
+      const formData = new FormData(event.currentTarget);
+      const currentPassword = String(
+        formData.get("currentPassword") || "",
       ).trim();
-      if (!password || password.length < 6)
-        throw new Error("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+      const newPassword = String(formData.get("newPassword") || "").trim();
+      const confirmPassword = String(
+        formData.get("confirmPassword") || "",
+      ).trim();
 
-      await api.users.update(currentUser.id, { password });
+      if (!currentPassword || !newPassword) {
+        throw new Error("กรุณากรอกข้อมูลให้ครบทุกช่อง");
+      }
+      if (newPassword !== confirmPassword) {
+        throw new Error("รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน");
+      }
+      if (newPassword.length < 6) {
+        throw new Error("รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร");
+      }
+
+      await api.auth.changePassword({ currentPassword, newPassword });
       showFlash("เปลี่ยนรหัสผ่านเรียบร้อยแล้ว", "success");
       form.reset();
     } catch (error) {
@@ -424,6 +445,7 @@ function RootApp() {
     const form = event.currentTarget;
     setIsSubmittingGenerateBill(true);
     const formData = new FormData(event.currentTarget);
+    const billId = String(formData.get("billId") || "");
     const roomId = String(formData.get("roomId") || "");
     const month = String(formData.get("month") || currentMonth);
     const waterUnits = Number(formData.get("waterUnits") || 0);
@@ -431,24 +453,44 @@ function RootApp() {
     const dueDate = String(formData.get("dueDate") || toDateInput(today));
 
     try {
-      const room = getRoomById(state, roomId);
-      if (!room || !room.tenantId)
-        throw new Error("กรุณาเลือกห้องที่มีผู้เช่าอยู่");
+      if (billId) {
+        // Update mode
+        const existing = state.bills.find((b) => b.id === billId);
+        if (!existing) throw new Error("ไม่พบบิลที่ต้องการแก้ไข");
 
-      await api.bills.create({
-        roomId,
-        tenantId: room.tenantId,
-        month,
-        baseRent: room.baseRent,
-        waterUnits,
-        electricityUnits,
-        dueDate,
-        qrReference: `SDM-${room.number}-${month.replace("-", "")}`,
-      });
+        const baseRent = existing.baseRent;
+        const total =
+          baseRent + waterUnits * WATER_RATE + electricityUnits * ELECTRIC_RATE;
+
+        await api.bills.update(billId, {
+          waterUnits,
+          electricityUnits,
+          dueDate,
+          total,
+        });
+        showFlash("อัปเดตข้อมูลบิลเรียบร้อย", "success");
+        setEditingBillId("");
+      } else {
+        // Create mode
+        const room = getRoomById(state, roomId);
+        if (!room || !room.tenantId)
+          throw new Error("กรุณาเลือกห้องที่มีผู้เช่าอยู่");
+
+        await api.bills.create({
+          roomId,
+          tenantId: room.tenantId,
+          month,
+          baseRent: room.baseRent,
+          waterUnits,
+          electricityUnits,
+          dueDate,
+          qrReference: `SDM-${room.number}-${month.replace("-", "")}`,
+        });
+        showFlash("ออกบิลและส่งให้ผู้เช่าเรียบร้อย", "success");
+      }
 
       await refreshData();
       form.reset();
-      showFlash("ออกบิลและส่งให้ผู้เช่าเรียบร้อย", "success");
     } catch (error) {
       showFlash(
         error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
@@ -456,6 +498,25 @@ function RootApp() {
       );
     } finally {
       setIsSubmittingGenerateBill(false);
+    }
+  };
+
+  const handleBillDelete = async (billId: string) => {
+    if (
+      !window.confirm(
+        "คุณต้องการลบบิลนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      )
+    )
+      return;
+    setDeletingBillId(billId);
+    try {
+      await api.bills.delete(billId);
+      showFlash("ลบบิลเรียบร้อยแล้ว", "success");
+      await refreshData();
+    } catch (error) {
+      showFlash("ไม่สามารถลบบิลได้ กรุณาลองใหม่", "danger");
+    } finally {
+      setDeletingBillId("");
     }
   };
 
@@ -758,9 +819,15 @@ function RootApp() {
         isSubmittingTenant={isSubmittingTenant}
         onSubmitTenant={handleTenantUpsert}
         onSubmitRoom={handleRoomUpsert}
-        onEditTenant={setEditingTenantId}
+        onEditTenant={(id) => {
+          setEditingTenantId(id);
+          scrollToTop();
+        }}
         onDeleteTenant={deleteTenant}
-        onEditRoom={setEditingRoomId}
+        onEditRoom={(id) => {
+          setEditingRoomId(id);
+          scrollToTop();
+        }}
         onDeleteRoom={deleteRoom}
         onClearTenantForm={() => setEditingTenantId("")}
         onClearRoomForm={() => setEditingRoomId("")}
@@ -774,8 +841,16 @@ function RootApp() {
         getRoomName={(roomId) => getRoomName(state, roomId)}
         isSubmittingGenerateBill={isSubmittingGenerateBill}
         updatingBillId={updatingBillId}
+        editingBillId={editingBillId}
+        deletingBillId={deletingBillId}
         onSubmitGenerateBill={handleGenerateBill}
         onSubmitBillStatus={handleAdminBillStatus}
+        onEditBill={(id) => {
+          setEditingBillId(id);
+          scrollToTop();
+        }}
+        onDeleteBill={handleBillDelete}
+        onClearBillForm={() => setEditingBillId("")}
       />
     );
   } else if (route === "maintenance") {

@@ -711,11 +711,16 @@ type AdminBillingViewProps = {
   getRoomName: (roomId: string) => string;
   isSubmittingGenerateBill: boolean;
   updatingBillId: string;
+  editingBillId: string;
+  deletingBillId: string;
   onSubmitGenerateBill: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitBillStatus: (
     event: FormEvent<HTMLFormElement>,
     billId: string,
   ) => void;
+  onEditBill: (billId: string) => void;
+  onDeleteBill: (billId: string) => void;
+  onClearBillForm: () => void;
 };
 
 export function AdminBillingView({
@@ -724,11 +729,18 @@ export function AdminBillingView({
   getRoomName,
   isSubmittingGenerateBill,
   updatingBillId,
+  editingBillId,
+  deletingBillId,
   onSubmitGenerateBill,
   onSubmitBillStatus,
+  onEditBill,
+  onDeleteBill,
+  onClearBillForm,
 }: AdminBillingViewProps) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterMonth, setFilterMonth] = useState("all");
+
+  const editingBill = state.bills.find((b) => b.id === editingBillId) || null;
 
   const occupiedRooms = state.rooms.filter((room) => room.tenantId);
   const allBills = [...state.bills].sort(sortBillsDescending);
@@ -750,17 +762,35 @@ export function AdminBillingView({
           <div className="panel-heading">
             <div>
               <span className="section-kicker">Meter Entry</span>
-              <h2>สร้างบิลรายเดือน</h2>
+              <h2>{editingBill ? "แก้ไขบิล" : "สร้างบิลรายเดือน"}</h2>
             </div>
+            {editingBill && (
+              <button
+                className="ghost-button compact"
+                type="button"
+                onClick={onClearBillForm}
+              >
+                ยกเลิกแก้ไข
+              </button>
+            )}
           </div>
           {occupiedRooms.length ? (
-            <form className="form-grid" onSubmit={onSubmitGenerateBill}>
+            <form
+              key={editingBill?.id || "new-bill"}
+              className="form-grid"
+              onSubmit={onSubmitGenerateBill}
+            >
+              <input
+                name="billId"
+                type="hidden"
+                defaultValue={editingBill?.id || ""}
+              />
               <label>
                 <span>เลือกห้องพัก</span>
                 <select
                   name="roomId"
-                  defaultValue={occupiedRooms[0].id}
-                  disabled={isSubmittingGenerateBill}
+                  defaultValue={editingBill?.roomId || occupiedRooms[0].id}
+                  disabled={isSubmittingGenerateBill || !!editingBill}
                 >
                   {occupiedRooms.map((room) => (
                     <option key={room.id} value={room.id}>
@@ -774,9 +804,9 @@ export function AdminBillingView({
                 <input
                   name="month"
                   type="month"
-                  defaultValue={currentMonth}
+                  defaultValue={editingBill?.month || currentMonth}
                   required
-                  disabled={isSubmittingGenerateBill}
+                  disabled={isSubmittingGenerateBill || !!editingBill}
                 />
               </label>
               <label>
@@ -786,6 +816,7 @@ export function AdminBillingView({
                   type="number"
                   min="0"
                   step="1"
+                  defaultValue={editingBill?.waterUnits ?? ""}
                   required
                   disabled={isSubmittingGenerateBill}
                 />
@@ -797,6 +828,7 @@ export function AdminBillingView({
                   type="number"
                   min="0"
                   step="1"
+                  defaultValue={editingBill?.electricityUnits ?? ""}
                   required
                   disabled={isSubmittingGenerateBill}
                 />
@@ -806,19 +838,25 @@ export function AdminBillingView({
                 <input
                   name="dueDate"
                   type="date"
-                  defaultValue={toDateInput(addDays(today, 7))}
+                  defaultValue={
+                    editingBill
+                      ? toDateInput(editingBill.dueDate)
+                      : toDateInput(addDays(today, 7))
+                  }
                   required
                   disabled={isSubmittingGenerateBill}
                 />
               </label>
               <button
-                className="primary-button"
+                className="primary-button full-span"
                 type="submit"
                 disabled={isSubmittingGenerateBill}
               >
                 {isSubmittingGenerateBill
-                  ? "กำลังออกบิล..."
-                  : "ออกบิลและส่งให้ผู้เช่า"}
+                  ? "กำลังบันทึก..."
+                  : editingBill
+                    ? "บันทึกการแก้ไขบิล"
+                    : "ออกบิลและส่งให้ผู้เช่า"}
               </button>
             </form>
           ) : (
@@ -993,6 +1031,24 @@ export function AdminBillingView({
                   )}
                 </div>
               </div>
+              <div className="room-actions-row" style={{ marginTop: "16px", marginBottom: "8px", borderTop: "1px solid var(--line)", paddingTop: "16px" }}>
+                <button
+                  className="ghost-button compact"
+                  type="button"
+                  onClick={() => onEditBill(bill.id)}
+                  disabled={updatingBillId === bill.id || deletingBillId === bill.id}
+                >
+                  แก้ไขบิล
+                </button>
+                <button
+                  className="ghost-button compact danger-text"
+                  type="button"
+                  onClick={() => onDeleteBill(bill.id)}
+                  disabled={updatingBillId === bill.id || deletingBillId === bill.id}
+                >
+                  {deletingBillId === bill.id ? "กำลังลบ..." : "ลบชุดบิล"}
+                </button>
+              </div>
               <form
                 className="inline-form two-column-inline"
                 onSubmit={(event) => onSubmitBillStatus(event, bill.id)}
@@ -1145,8 +1201,21 @@ export function AdminMaintenanceView({
                   <textarea name="adminNote" rows={3} defaultValue={request.adminNote} placeholder="เช่น นัดเข้าซ่อมเวลา 15:00 น." disabled={updatingRequestId === request.id} className={cn(inputClass, "resize-none")} />
                 </label>
                 <label className={cn(labelClass, "sm:col-span-2")}>
-                  <span>รูปยืนยันหลังซ่อม</span>
-                  <input name="completionImage" type="file" accept="image/*" disabled={updatingRequestId === request.id} className={cn(inputClass, "file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary")} />
+                  <span>รูปยืนยันหลังซ่อม (ไฟล์รูปภาพเท่านั้น · ไม่รองรับ PDF)</span>
+                  <input
+                    name="completionImage"
+                    type="file"
+                    accept="image/*"
+                    disabled={updatingRequestId === request.id}
+                    className={cn(inputClass, "file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary")}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file && !file.type.startsWith("image/")) {
+                        alert("ไม่สามารถอัพโหลดแบบไฟล์ PDF ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น");
+                        e.target.value = "";
+                      }
+                    }}
+                  />
                 </label>
                 <button type="submit" disabled={updatingRequestId === request.id} className="sm:col-span-2 flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:translate-y-0">
                   {updatingRequestId === request.id ? "กำลังบันทึก..." : "อัปเดตคำร้อง"}

@@ -13,8 +13,8 @@ import type {
 export const STORAGE_KEY = "smart-dorm-react-state-v2";
 export const SESSION_KEY = "smart-dorm-react-session-v1";
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-export const WATER_RATE = 18;
-export const ELECTRIC_RATE = 8;
+export const WATER_RATE = 30;
+export const ELECTRIC_RATE = 6;
 
 export const routeDefinitions: Record<Role, RouteDefinition[]> = {
   tenant: [
@@ -225,6 +225,9 @@ export function sortBillsDescending(left: Bill, right: Bill) {
 
 export async function readImageFile(file: File | null) {
   if (!file) return "";
+  if (!file.type.startsWith("image/")) {
+    throw new Error("ไม่สามารถอัพโหลดแบบไฟล์ PDF หรือไฟล์อื่นๆ ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น");
+  }
   if (file.size > MAX_IMAGE_SIZE) {
     throw new Error("ไฟล์ภาพต้องมีขนาดไม่เกิน 5 MB");
   }

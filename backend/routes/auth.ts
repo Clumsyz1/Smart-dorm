@@ -129,4 +129,56 @@ router.get("/me", authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// POST /api/auth/change-password — Allow user to change their own password
+router.post(
+  "/change-password",
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.user!.id;
+
+      if (!currentPassword || !newPassword) {
+        return res
+          .status(400)
+          .json({ error: "กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่" });
+      }
+
+      // Get user from DB
+      const result = await pool.query(
+        "SELECT password_hash FROM users WHERE id = $1",
+        [userId],
+      );
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "ไม่พบข้อมูลผู้ใช้" });
+      }
+
+      const user = result.rows[0];
+
+      // Check current password
+      const validPassword = await bcrypt.compare(
+        currentPassword,
+        user.password_hash,
+      );
+      if (!validPassword) {
+        return res.status(401).json({ error: "รหัสผ่านปัจจุบันไม่ถูกต้อง" });
+      }
+
+      // Hash new password
+      const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+      // Update password in DB
+      await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
+        newPasswordHash,
+        userId,
+      ]);
+
+      return res.json({ message: "เปลี่ยนรหัสผ่านสำเร็จ" });
+    } catch (err) {
+      console.error("Change password error:", err);
+      return res.status(500).json({ error: "เกิดข้อผิดพลาดในระบบ" });
+    }
+  },
+);
+
 export default router;

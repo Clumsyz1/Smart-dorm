@@ -5,8 +5,16 @@ async function testConn() {
     const res = await pool.query("SELECT NOW()");
     console.log("✅ Database connected successfully:", res.rows[0]);
     
-    const userRes = await pool.query("SELECT count(*) FROM users");
-    console.log("👥 Users in database:", userRes.rows[0].count);
+    const users = await pool.query("SELECT count(*) FROM users");
+    const rooms = await pool.query("SELECT count(*) FROM rooms");
+    const bills = await pool.query("SELECT count(*) FROM bills");
+    const requests = await pool.query("SELECT count(*) FROM maintenance_requests");
+    
+    console.log("\n📊 Current Database Statistics:");
+    console.log(`- 👥 Total Users: ${users.rows[0].count}`);
+    console.log(`- 🏢 Total Rooms: ${rooms.rows[0].count}`);
+    console.log(`- 🧾 Total Bills: ${bills.rows[0].count}`);
+    console.log(`- 🧰 Maintenance Requests: ${requests.rows[0].count}`);
     
     process.exit(0);
   } catch (err: any) {

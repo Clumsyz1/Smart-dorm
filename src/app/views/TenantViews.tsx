@@ -1,7 +1,8 @@
 import type { FormEvent } from "react";
 import {
   EmptyState,
-  PseudoQr,
+  PasswordInput,
+  QrPayment,
   StatusBadge,
   SummaryCard,
 } from "../components/ui";
@@ -143,11 +144,29 @@ export function TenantDashboardView({
           </div>
           <form className="form-grid" onSubmit={onChangePassword}>
             <label className="full-span">
-              <span>ตั้งรหัสผ่านใหม่</span>
-              <input
-                name="password"
-                type="password"
-                placeholder="รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)"
+              <span>รหัสผ่านปัจจุบัน</span>
+              <PasswordInput
+                name="currentPassword"
+                placeholder="กรอกรหัสผ่านปัจจุบัน"
+                required
+                disabled={isSubmittingPassword}
+              />
+            </label>
+            <label>
+              <span>รหัสผ่านใหม่</span>
+              <PasswordInput
+                name="newPassword"
+                placeholder="อย่างน้อย 6 ตัวอักษร"
+                required
+                disabled={isSubmittingPassword}
+                minLength={6}
+              />
+            </label>
+            <label>
+              <span>ยืนยันรหัสผ่านใหม่</span>
+              <PasswordInput
+                name="confirmPassword"
+                placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
                 required
                 disabled={isSubmittingPassword}
                 minLength={6}
@@ -323,7 +342,7 @@ export function TenantBillsView({
                   </div>
                 </div>
                 <div className="detail-card subtle-card">
-                  <PseudoQr reference={bill.qrReference} />
+                  <QrPayment reference={bill.qrReference} />
                 </div>
               </div>
               {bill.status === "paid" ? (
@@ -342,13 +361,20 @@ export function TenantBillsView({
                   onSubmit={(event) => void onPayBill(event, bill.id)}
                 >
                   <label>
-                    <span>แนบหลักฐานการชำระเงิน</span>
+                    <span>แนบหลักฐานการชำระเงิน (ไฟล์รูปภาพเท่านั้น · ไม่รองรับ PDF)</span>
                     <input
                       name="slipImage"
                       type="file"
                       accept="image/*"
                       required
                       disabled={payingBillId === bill.id}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file && !file.type.startsWith("image/")) {
+                          alert("ไม่สามารถอัพโหลดแบบไฟล์ PDF ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น");
+                          e.target.value = "";
+                        }
+                      }}
                     />
                   </label>
                   <button
@@ -473,12 +499,19 @@ export function TenantMaintenanceView({
               />
             </label>
             <label className="full-span">
-              <span>แนบรูปภาพ (ไม่เกิน 5 MB)</span>
+              <span>แนบรูปภาพ (ไฟล์รูปภาพเท่านั้น · ไม่รองรับ PDF)</span>
               <input
                 name="residentImage"
                 type="file"
                 accept="image/*"
                 disabled={isSubmitting || !room}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file && !file.type.startsWith("image/")) {
+                    alert("ไม่สามารถอัพโหลดแบบไฟล์ PDF ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น");
+                    e.target.value = "";
+                  }
+                }}
               />
             </label>
             <button
