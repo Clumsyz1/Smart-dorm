@@ -46,8 +46,8 @@ export function AuthScreen({
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
           </div>
-          <h1>Smart Dorm</h1>
-          <p className="auth-subtitle">ระบบบริหารจัดการหอพักอัจฉริยะ</p>
+          <h1>Kamu Kamu</h1>
+          <p className="auth-subtitle">ระบบบริหารจัดการหอพัก</p>
         </div>
 
         {/* Flash message */}

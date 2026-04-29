@@ -32,6 +32,7 @@ type TenantDashboardViewProps = {
   onNavigateAnnouncements: () => void;
   isSubmittingPassword?: boolean;
   onChangePassword?: (event: FormEvent<HTMLFormElement>) => void;
+  onEditRequest?: (requestId: string) => void;
 };
 
 export function TenantDashboardView({
@@ -45,6 +46,7 @@ export function TenantDashboardView({
   onNavigateAnnouncements,
   isSubmittingPassword,
   onChangePassword,
+  onEditRequest,
 }: TenantDashboardViewProps) {
   const currentBill =
     bills.find((bill) => bill.status !== "paid") || bills[0] || null;
@@ -233,7 +235,20 @@ export function TenantDashboardView({
                   </small>
                 </div>
                 <div className="list-item-meta vertical-align">
-                  <StatusBadge status={request.status} />
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <StatusBadge status={request.status} />
+                    {request.status !== "resolved" &&
+                      request.status !== "cancelled" &&
+                      onEditRequest && (
+                        <button
+                          type="button"
+                          className="ghost-button compact"
+                          onClick={() => onEditRequest(request.id)}
+                        >
+                          Edit
+                        </button>
+                      )}
+                  </div>
                   <span>{request.assignee || "รอมอบหมายงาน"}</span>
                 </div>
               </div>
@@ -314,7 +329,7 @@ export function TenantBillsView({
                   <strong>{formatCurrency(getBillTotal(bill))}</strong>
                 </div>
               </div>
-              <div className="content-grid two-columns tight-gap">
+              <div className="content-grid two-columns tight-gap align-start">
                 <div className="detail-card subtle-card">
                   <div className="detail-row">
                     <span>ค่าเช่าพื้นฐาน</span>
@@ -361,7 +376,9 @@ export function TenantBillsView({
                   onSubmit={(event) => void onPayBill(event, bill.id)}
                 >
                   <label>
-                    <span>แนบหลักฐานการชำระเงิน (ไฟล์รูปภาพเท่านั้น · ไม่รองรับ PDF)</span>
+                    <span>
+                      แนบหลักฐานการชำระเงิน (ไฟล์รูปภาพเท่านั้น · ไม่รองรับ PDF)
+                    </span>
                     <input
                       name="slipImage"
                       type="file"
@@ -371,7 +388,9 @@ export function TenantBillsView({
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file && !file.type.startsWith("image/")) {
-                          alert("ไม่สามารถอัพโหลดแบบไฟล์ PDF ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น");
+                          alert(
+                            "ไม่สามารถอัพโหลดแบบไฟล์ PDF ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น",
+                          );
                           e.target.value = "";
                         }
                       }}
@@ -410,15 +429,24 @@ type TenantMaintenanceViewProps = {
   room: Room | null;
   requests: MaintenanceRequest[];
   isSubmitting: boolean;
+  editingRequestId?: string;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>;
+  onEditRequest?: (requestId: string) => void;
+  onClearRequestForm?: () => void;
 };
 
 export function TenantMaintenanceView({
   room,
   requests,
   isSubmitting,
+  editingRequestId,
   onSubmit,
+  onEditRequest,
+  onClearRequestForm,
 }: TenantMaintenanceViewProps) {
+  const editingRequest =
+    requests.find((r) => r.id === editingRequestId) || null;
+
   return (
     <>
       <section className="content-grid three-columns">
@@ -449,9 +477,20 @@ export function TenantMaintenanceView({
         <article className="panel">
           <div className="panel-heading">
             <div>
-              <span className="section-kicker">Create Request</span>
-              <h2>แจ้งซ่อมใหม่</h2>
+              <span className="section-kicker">
+                {editingRequest ? "Edit Request" : "Create Request"}
+              </span>
+              <h2>{editingRequest ? "แก้ไขคำร้องแจ้งซ่อม" : "แจ้งซ่อมใหม่"}</h2>
             </div>
+            {editingRequest && (
+              <button
+                className="ghost-button compact"
+                type="button"
+                onClick={onClearRequestForm}
+              >
+                ยกเลิกแก้ไข
+              </button>
+            )}
           </div>
           {room ? (
             <div className="callout info">
@@ -462,15 +501,22 @@ export function TenantMaintenanceView({
             </div>
           ) : null}
           <form
+            key={editingRequest?.id || "new-request"}
             className="form-grid"
             onSubmit={(event) => void onSubmit(event)}
           >
+            <input
+              name="requestId"
+              type="hidden"
+              defaultValue={editingRequest?.id || ""}
+            />
             <label>
               <span>หัวข้อปัญหา</span>
               <input
                 name="title"
                 type="text"
                 placeholder="เช่น แอร์ไม่เย็น"
+                defaultValue={editingRequest?.title || ""}
                 required
                 disabled={isSubmitting || !room}
               />
@@ -479,7 +525,7 @@ export function TenantMaintenanceView({
               <span>หมวดหมู่</span>
               <select
                 name="category"
-                defaultValue="ไฟฟ้า"
+                defaultValue={editingRequest?.category || "ไฟฟ้า"}
                 disabled={isSubmitting || !room}
               >
                 <option value="ไฟฟ้า">ไฟฟ้า</option>
@@ -494,6 +540,7 @@ export function TenantMaintenanceView({
                 name="description"
                 rows={4}
                 placeholder="อธิบายปัญหาที่พบและช่วงเวลาที่เกิดขึ้น"
+                defaultValue={editingRequest?.description || ""}
                 required
                 disabled={isSubmitting || !room}
               />
@@ -508,7 +555,9 @@ export function TenantMaintenanceView({
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file && !file.type.startsWith("image/")) {
-                    alert("ไม่สามารถอัพโหลดแบบไฟล์ PDF ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น");
+                    alert(
+                      "ไม่สามารถอัพโหลดแบบไฟล์ PDF ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น",
+                    );
                     e.target.value = "";
                   }
                 }}
@@ -519,7 +568,11 @@ export function TenantMaintenanceView({
               type="submit"
               disabled={isSubmitting || !room}
             >
-              {isSubmitting ? "กำลังส่งคำร้อง..." : "ส่งคำร้องแจ้งซ่อม"}
+              {isSubmitting
+                ? "กำลังส่งคำร้อง..."
+                : editingRequest
+                  ? "บันทึกการแก้ไข"
+                  : "ส่งคำร้องแจ้งซ่อม"}
             </button>
           </form>
         </article>
@@ -541,7 +594,20 @@ export function TenantMaintenanceView({
                       {formatDate(request.createdAt, true)}
                     </p>
                   </div>
-                  <StatusBadge status={request.status} />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <StatusBadge status={request.status} />
+                    {request.status !== "resolved" &&
+                      request.status !== "cancelled" &&
+                      onEditRequest && (
+                        <button
+                          type="button"
+                          className="ghost-button compact"
+                          onClick={() => onEditRequest(request.id)}
+                        >
+                          แก้ไข
+                        </button>
+                      )}
+                  </div>
                 </div>
                 <p>{request.description}</p>
                 <div className="detail-stack compact">

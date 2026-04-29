@@ -1,6 +1,6 @@
+import { Calendar, Inbox, Megaphone, Send, Trash2 } from "lucide-react";
 import type { FormEventHandler } from "react";
-import { Megaphone, Send, Trash2, Inbox, Calendar, User } from "lucide-react";
-import { EmptyState, StatusBadge } from "../components/ui";
+import { StatusBadge } from "../components/ui";
 import { formatDate } from "../core";
 import type { Announcement } from "../types";
 
@@ -149,7 +149,6 @@ export function AnnouncementsView({
                 {announcement.message}
               </p>
               <div className="mt-3 pt-3 border-t border-border/50 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                <User className="h-3 w-3" />
                 ประกาศโดย {announcement.createdBy}
               </div>
             </article>

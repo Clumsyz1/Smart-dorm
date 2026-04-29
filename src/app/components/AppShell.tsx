@@ -1,18 +1,19 @@
-import { useEffect, useState, type ReactNode } from "react";
 import {
-  LayoutDashboard,
   Building2,
-  Receipt,
-  Wrench,
-  Megaphone,
-  Home,
   CreditCard,
+  Home,
+  LayoutDashboard,
   LogOut,
+  Megaphone,
   Menu,
-  X,
+  Receipt,
   User as UserIcon,
+  Wrench,
+  X,
   type LucideIcon,
 } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { cn } from "../../lib/utils";
 import { getRoleLabel } from "../core";
 import type {
   AppRoute,
@@ -24,7 +25,6 @@ import type {
 import type { ThemeMode } from "../useTheme";
 import { ThemeToggle } from "./ThemeToggle";
 import { SummaryCard } from "./ui";
-import { cn } from "../../lib/utils";
 
 const routeIcons: Record<AppRoute, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -98,7 +98,7 @@ export function AppShell({
             </div>
             <div className="flex flex-col leading-tight">
               <strong className="text-base font-bold tracking-tight text-foreground">
-                Smart Dorm
+                Kamu Kamu
               </strong>
               <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Management
@@ -183,7 +183,7 @@ export function AppShell({
             className="flex items-center justify-center gap-2 rounded-xl border border-border bg-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            ออกจากระบบ
+            Logout
           </button>
         </div>
       </aside>

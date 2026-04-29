@@ -18,13 +18,13 @@ export const ELECTRIC_RATE = 6;
 
 export const routeDefinitions: Record<Role, RouteDefinition[]> = {
   tenant: [
-    { key: "dashboard", label: "แดชบอร์ด", emoji: "🏠" },
+    { key: "dashboard", label: "Dashboard", emoji: "🏠" },
     { key: "bills", label: "บิลและการชำระเงิน", emoji: "💳" },
     { key: "maintenance", label: "แจ้งซ่อม", emoji: "🛠️" },
     { key: "announcements", label: "ประกาศ", emoji: "📣" },
   ],
   admin: [
-    { key: "dashboard", label: "แดชบอร์ด", emoji: "📊" },
+    { key: "dashboard", label: "Dashboard", emoji: "📊" },
     { key: "occupancy", label: "ห้องพักและผู้เช่า", emoji: "🏢" },
     { key: "billing", label: "มิเตอร์และบิล", emoji: "🧾" },
     { key: "maintenance", label: "จัดการงานซ่อม", emoji: "🧰" },
@@ -226,7 +226,9 @@ export function sortBillsDescending(left: Bill, right: Bill) {
 export async function readImageFile(file: File | null) {
   if (!file) return "";
   if (!file.type.startsWith("image/")) {
-    throw new Error("ไม่สามารถอัพโหลดแบบไฟล์ PDF หรือไฟล์อื่นๆ ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น");
+    throw new Error(
+      "ไม่สามารถอัพโหลดแบบไฟล์ PDF หรือไฟล์อื่นๆ ได้ กรุณาใช้ไฟล์รูปภาพเท่านั้น",
+    );
   }
   if (file.size > MAX_IMAGE_SIZE) {
     throw new Error("ไฟล์ภาพต้องมีขนาดไม่เกิน 5 MB");

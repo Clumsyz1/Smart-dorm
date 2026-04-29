@@ -5,6 +5,7 @@ import { AuthScreen } from "./components/AuthScreen";
 import { FlashMessage } from "./components/ui";
 import {
   currentMonth,
+  ELECTRIC_RATE,
   formatCurrency,
   getAssignableRoomsForTenant,
   getBillsForTenant,
@@ -26,7 +27,6 @@ import {
   toDateInput,
   today,
   WATER_RATE,
-  ELECTRIC_RATE,
 } from "./core";
 import type {
   AppRoute,
@@ -85,6 +85,7 @@ function RootApp() {
   const [editingBillId, setEditingBillId] = useState("");
   const [deletingBillId, setDeletingBillId] = useState("");
   const [updatingRequestId, setUpdatingRequestId] = useState("");
+  const [editingRequestId, setEditingRequestId] = useState("");
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
   // Initial load
@@ -224,24 +225,42 @@ function RootApp() {
     setIsSubmittingTenantMaintenance(true);
     try {
       const formData = new FormData(event.currentTarget);
-      const residentImage = await readImageFile(
+      const requestId = String(formData.get("requestId") || "");
+      const title = String(formData.get("title") || "").trim();
+      const category = String(formData.get("category") || "").trim();
+      const description = String(formData.get("description") || "").trim();
+
+      const residentImageFile =
         (
           event.currentTarget.elements.namedItem(
             "residentImage",
           ) as HTMLInputElement
-        )?.files?.[0] || null,
-      );
+        )?.files?.[0] || null;
 
-      await api.maintenance.create({
-        title: String(formData.get("title") || "").trim(),
-        category: String(formData.get("category") || "").trim(),
-        description: String(formData.get("description") || "").trim(),
-        residentImage,
-      });
+      const residentImage = await readImageFile(residentImageFile);
+
+      if (requestId) {
+        // Edit mode
+        const payload: any = { title, category, description };
+        if (residentImage) {
+          payload.residentImage = residentImage;
+        }
+        await api.maintenance.update(requestId, payload);
+        showFlash("แก้ไขคำร้องแจ้งซ่อมเรียบร้อยแล้ว", "success");
+        setEditingRequestId("");
+      } else {
+        // Create mode
+        await api.maintenance.create({
+          title,
+          category,
+          description,
+          residentImage,
+        });
+        showFlash("ส่งคำร้องแจ้งซ่อมเรียบร้อยแล้ว", "success");
+      }
 
       await refreshData();
       form.reset();
-      showFlash("ส่งคำร้องแจ้งซ่อมเรียบร้อยแล้ว", "success");
     } catch (error) {
       showFlash(
         error instanceof Error ? error.message : "เกิดข้อผิดพลาด",
@@ -753,6 +772,11 @@ function RootApp() {
           onNavigateAnnouncements={() => setRoute("announcements")}
           isSubmittingPassword={isSubmittingPassword}
           onChangePassword={handleTenantChangePassword}
+          onEditRequest={(id) => {
+            setEditingRequestId(id);
+            setRoute("maintenance");
+            scrollToTop();
+          }}
         />
       );
     } else if (route === "bills") {
@@ -770,7 +794,13 @@ function RootApp() {
           room={currentRoom}
           requests={tenantRequests}
           isSubmitting={isSubmittingTenantMaintenance}
+          editingRequestId={editingRequestId}
           onSubmit={handleTenantMaintenance}
+          onEditRequest={(id) => {
+            setEditingRequestId(id);
+            scrollToTop();
+          }}
+          onClearRequestForm={() => setEditingRequestId("")}
         />
       );
     } else {
@@ -893,6 +923,5 @@ function RootApp() {
     </AppShell>
   );
 }
-
 
 export default RootApp;
